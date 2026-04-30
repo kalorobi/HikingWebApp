@@ -61,10 +61,10 @@ export function subscribeSupabase(dispatch) {
             properties: {}}
         });
       }
-    ).subscribe(/*status => {
+    ).subscribe(status => {
       dispatch({
         type: "SET_SUBSCRIBE_STATUS",
         payload : status
       });
-    }*/)
+    })
 }

@@ -6,6 +6,7 @@ import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { geojsonSupabase, subscribeSupabase } from '../services/LiveSupabase'; 
 import Login from '../components/Login'
+import { LiveStatus } from '../components/StatusDisplay';
 
 const initialState = {
   geojson: {type: "FeatureCollection",features: []},
@@ -76,7 +77,7 @@ const Live = () => {
         dispatch({ type: "ERROR", payload: err.message });
       }
 
-      //channel = subscribeSupabase(dispatch);
+      channel = subscribeSupabase(dispatch);
     }
 
     load();
@@ -97,6 +98,7 @@ const Live = () => {
   return (
     <div style={{ width: '100%', height: '100vh' }}>
       {!auth.isOk && (<Login setAuth={setAuth} currentAuth={auth}/>)}
+      <LiveStatus status={state.realTimeStatus} />
       <LiveMap geojson={state.geojson} />
     </div>
   );
