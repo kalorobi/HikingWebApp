@@ -42,15 +42,16 @@ export default function liveMap ({geojson}) {
         paint: { 'line-color': '#c7f21c', 'line-width': 5 } });
     });
 
-    // Kezdő marker (láthatatlanul, amíg nincs adat)
     marker.current = new maplibregl.Marker({ color: "#FF0000" })
     .setLngLat([19.826587,47.9263058])
     .addTo(map.current);
+
     popup.current = new maplibregl.Popup({closeButton: true,closeOnClick: false})
     .setLngLat(agasvar)
     .setHTML(`
       <div>Túra még nem indult el.</div>
     `).addTo(map.current);
+
     map.current.flyTo({ center: agasvar, speed: 0.8 });
 
       
@@ -65,9 +66,12 @@ export default function liveMap ({geojson}) {
     if (!map.current) return;
 
     if (marker.current && map.current && geojson.features.length > 0) {
+      popup.current.remove();
+      
       const len = geojson.features.length - 1;
       const lat = parseFloat(geojson.features[len].geometry.coordinates[1]);
       const lng = parseFloat(geojson.features[len].geometry.coordinates[0]);
+
       marker.current.setLngLat([lng, lat]);
       map.current.flyTo({ center: [lng, lat], speed: 0.5 });
       
