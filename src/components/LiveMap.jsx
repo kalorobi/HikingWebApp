@@ -8,6 +8,7 @@ export default function liveMap ({geojson}) {
   const map = useRef(null);
   const marker = useRef(null);
   const popup = useRef(null);
+  const agasvar = [19.826587,47.9263058];
 
   function lineString (geoJson) {
     if(geojson.features.length === 0) return geojson;
@@ -31,7 +32,7 @@ export default function liveMap ({geojson}) {
       container: mapContainer.current,
       style: 'https://tiles.openfreemap.org/styles/liberty', 
       center: [19.0402, 47.4979],
-      zoom: 12
+      zoom: 14
     });
     
     map.current.on('load', () => {
@@ -46,11 +47,11 @@ export default function liveMap ({geojson}) {
     .setLngLat([19.826587,47.9263058])
     .addTo(map.current);
     popup.current = new maplibregl.Popup({closeButton: true,closeOnClick: false})
-    .setLngLat([19.826587,47.9263058])
+    .setLngLat(agasvar)
     .setHTML(`
       <div>Túra még nem indult el.</div>
     `).addTo(map.current);
-    map.current.flyTo({ center: [19.826587,47.9263058], speed: 0.8 });
+    map.current.flyTo({ center: agasvar, speed: 0.8 });
 
       
     // Takarítás az oldal elhagyásakor

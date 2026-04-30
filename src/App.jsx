@@ -5,6 +5,7 @@ function App() {
   return (
     <Router>
       <Routes>
+        <Route path="/live" element={<Live />} />
         <Route path="/live/:user" element={<Live />} />
         <Route path="/" element={<h1>Hamarosan</h1>} />
       </Routes>
