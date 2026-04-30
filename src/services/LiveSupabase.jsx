@@ -1,7 +1,9 @@
-import { supabase } from '../supabaseClient';
+import { supabase } from './supabaseClient';
 
 export async function geojsonSupabase(user) {
 
+  if(!user) {return {type: "FeatureCollection",features : []}}
+  
   const today = new Date(); today.setHours(0, 0, 0, 0);
 
   const { data, error} = await supabase
@@ -59,5 +61,10 @@ export function subscribeSupabase(dispatch) {
             properties: {}}
         });
       }
-    ).subscribe(status => {console.log("STATUS", status);})
+    ).subscribe(/*status => {
+      dispatch({
+        type: "SET_SUBSCRIBE_STATUS",
+        payload : status
+      });
+    }*/)
 }
