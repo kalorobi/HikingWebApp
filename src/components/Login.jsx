@@ -1,14 +1,24 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 
-export default function Login ({setAuth, currentAuth}) {
+export default function Login ({currentAuth, setAuth}) {
 
-console.log(currentAuth);
+  const liveKey = import.meta.env.VITE_LIVE_KEY;
+  const [error, setError] = useState("");
   const navigate = useNavigate();
+
   const handleLogin = (e) => {
     e.preventDefault();
     if (currentAuth.user && currentAuth.key) {
-      navigate(`/live/${currentAuth.user}?key=${encodeURIComponent(currentAuth.key)}`);
+      if (currentAuth.key === liveKey) {
+        navigate(`/live/${currentAuth.user}?key=${encodeURIComponent(currentAuth.key)}`);
+      }
+      else {
+        setError("Hibás kulcs");
+      }
+    }
+    else {
+      setError("Hibás adatok");
     }
   };
   return (
@@ -20,6 +30,7 @@ console.log(currentAuth);
           value={currentAuth.user} onChange={e => setAuth({...currentAuth, user: e.target.value})}
           style={inputStyle}
         />
+        <div style={{ color: "red" }}>{ error }</div>
         <input 
           type="password" placeholder="Biztonsági kulcs" 
           value={currentAuth.key} onChange={e => setAuth({...currentAuth, key: e.target.value})}
