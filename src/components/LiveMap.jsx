@@ -34,6 +34,9 @@ export default function liveMap ({geojson}) {
       center: [19.0402, 47.4979],
       zoom: 14
     });
+
+    map.current.dragRotate.disable();
+    map.current.touchZoomRotate.disableRotation(); 
     
     map.current.on('load', () => {
       //UTVONAL LAYER
