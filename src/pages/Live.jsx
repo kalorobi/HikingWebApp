@@ -86,7 +86,7 @@ const Live = () => {
       if (channel) supabase.removeChannel(channel);
     };
 
-  }, [auth.isOk, auth.user]);
+  }, [auth.isOk]);
 
   useEffect (() => {
     console.log("Realtime: " + state.realTimeStatus);
@@ -97,7 +97,7 @@ const Live = () => {
 
   return (
     <div style={{ width: '100%', height: '100vh' }}>
-      {!auth.isOk && (<Login setAuth={setAuth} currentAuth={auth}/>)}
+      {!auth.isOk && (<Login currentAuth={auth} setAuth={setAuth} />)}
       <LiveStatus status={state.realTimeStatus} />
       <LiveMap geojson={state.geojson} />
     </div>
