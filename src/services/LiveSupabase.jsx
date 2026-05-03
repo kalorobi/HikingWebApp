@@ -66,5 +66,7 @@ export function subscribeSupabase(dispatch) {
         type: "SET_SUBSCRIBE_STATUS",
         payload : status
       });
-    })
+    });
+
+    return channel;
 }

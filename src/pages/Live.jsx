@@ -57,6 +57,7 @@ const Live = () => {
     isOk: !!(user && key) && (key === liveKey)
   });
   const [state, dispatch] = useReducer(reducer, initialState);
+  const liveChannel = useRef(null);
 
   useEffect(() => {
     if ((user && key) && (key === liveKey)) {
@@ -68,7 +69,6 @@ const Live = () => {
   useEffect(() => {
      if (!auth.isOk) return;
 
-    let channel;
     async function load() {
       try {
         const geojson = await geojsonSupabase(auth.user);
@@ -77,20 +77,19 @@ const Live = () => {
         dispatch({ type: "ERROR", payload: err.message });
       }
 
-      channel = subscribeSupabase(dispatch);
+      if(!liveChannel.current) liveChannel.current = subscribeSupabase(dispatch);
     }
 
     load();
 
     return () => {
-      if (channel) supabase.removeChannel(channel);
+      if (liveChannel.current) {
+        liveChannel.current.unsubscribe();
+        liveChannel.current = null;
+      }
     };
 
   }, [auth.isOk]);
-
-  useEffect (() => {
-    console.log("Realtime: " + state.realTimeStatus);
-  }, [state.realTimeStatus])
 
   //if (state.loading) return <p>Loading...</p>;
   //if (state.error) return <p>Error: {state.error}</p>;
