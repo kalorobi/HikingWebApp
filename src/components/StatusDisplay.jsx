@@ -12,7 +12,6 @@ export function LiveStatus({status}){
     return (
         <div style={{ ...statusStyle, backgroundColor: color }}>{status}</div>
     );
-
 }
 
 const statusStyle = { 

@@ -4,7 +4,7 @@ import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 export default function Login ({currentAuth, setAuth}) {
 
   const liveKey = import.meta.env.VITE_LIVE_KEY;
-  const [error, setError] = useState("");
+  const [error, setError] = useState({user : "", key: ""});
   const navigate = useNavigate();
 
   const handleLogin = (e) => {
@@ -14,25 +14,26 @@ export default function Login ({currentAuth, setAuth}) {
         navigate(`/live/${currentAuth.user}?key=${encodeURIComponent(currentAuth.key)}`);
       }
       else {
-        setError("Hibás kulcs");
+        setError({...error, key: "Hibás kulcs"});
       }
     }
     else {
-      setError("Hibás adatok");
+      setError({...error, user: "User hiba"});
     }
   };
   return (
     <div style={overlayStyle}>
       <form onSubmit={handleLogin} style={formStyle}>
         <h2>Login:</h2>
+        <div>{error.user}</div>
         <input 
           type="text" placeholder="Túrázó:" 
           value={currentAuth.user} onChange={e => setAuth({...currentAuth, user: e.target.value})}
           style={inputStyle}
         />
-        <div style={{ color: "red" }}>{ error }</div>
+        <div>{error.key}</div>
         <input 
-          type="password" placeholder="Biztonsági kulcs" 
+          type="password" placeholder="Biztonsági kulcs:" 
           value={currentAuth.key} onChange={e => setAuth({...currentAuth, key: e.target.value})}
           style={inputStyle}
         />

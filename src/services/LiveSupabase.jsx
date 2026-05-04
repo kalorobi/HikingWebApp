@@ -8,7 +8,7 @@ export async function geojsonSupabase(user) {
 
   const { data, error} = await supabase
   .from('coordinates')
-  .select('lat, lng', 'mode')
+  .select('lat, lng, mode')
   .eq('user', user)
   .gte('time', today.toISOString())
   .order('time', { ascending: true }); 

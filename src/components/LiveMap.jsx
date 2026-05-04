@@ -28,8 +28,6 @@ export default function liveMap ({geojson}) {
   useEffect(() => {
     if (map.current) return; // Ha már létezik a térkép, ne építsük újra
 
-console.log("MAP_INIC");
-
     map.current = new maplibregl.Map({
       container: mapContainer.current,
       style: 'https://tiles.openfreemap.org/styles/liberty', 
@@ -41,7 +39,6 @@ console.log("MAP_INIC");
     map.current.touchZoomRotate.disableRotation(); 
     
     map.current.on('load', () => {
-      //UTVONAL LAYER
       map.current.addSource('route', { type: 'geojson', data: { type: "FeatureCollection", features: [] }});
       map.current.addLayer({ id: 'route-layer', type: 'line', source: 'route', 
         paint: { 'line-color': '#c7f21c', 'line-width': 5 } });
@@ -59,10 +56,8 @@ console.log("MAP_INIC");
 
     map.current.flyTo({ center: agasvar, speed: 0.8 });
 
-      
-    // Takarítás az oldal elhagyásakor
     return () => {
-      if (map.current) {map.current.remove();map.current = null;}
+      if (map.current) {map.current.remove(); map.current = null;}
     };
   }, []);
 
