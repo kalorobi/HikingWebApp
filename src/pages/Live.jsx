@@ -10,7 +10,6 @@ import { LiveStatus } from '../components/StatusDisplay';
 
 const initialState = {
   geojson: {type: "FeatureCollection",features: []},
-  loading: true,
   error: null,
   realTimeStatus: "CONNECTING"
 };
@@ -21,7 +20,6 @@ function reducer(state, action) {
       return {
         ...state,
         geojson: action.payload,
-        loading: false
       };
 
     case "ADD_POINT": {
@@ -38,7 +36,6 @@ function reducer(state, action) {
 
     case "ERROR": return {...state,
         error: action.payload,
-        loading: false
       };
 
     default:
@@ -90,9 +87,6 @@ const Live = () => {
     };
 
   }, [auth.isOk]);
-
-  //if (state.loading) return <p>Loading...</p>;
-  //if (state.error) return <p>Error: {state.error}</p>;
 
   return (
     <div style={{ width: '100%', height: '100vh' }}>
