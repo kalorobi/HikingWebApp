@@ -27,7 +27,9 @@ export default function liveMap ({geojson}) {
   // --- 1. Térkép inicializálása (Csak egyszer fut le) ---
   useEffect(() => {
     if (map.current) return; // Ha már létezik a térkép, ne építsük újra
-      
+
+console.log("MAP_INIC");
+
     map.current = new maplibregl.Map({
       container: mapContainer.current,
       style: 'https://tiles.openfreemap.org/styles/liberty', 
@@ -40,7 +42,7 @@ export default function liveMap ({geojson}) {
     
     map.current.on('load', () => {
       //UTVONAL LAYER
-      map.current.addSource('route', { type: 'geojson', data: lineString(geojson)});
+      map.current.addSource('route', { type: 'geojson', data: { type: "FeatureCollection", features: [] }});
       map.current.addLayer({ id: 'route-layer', type: 'line', source: 'route', 
         paint: { 'line-color': '#c7f21c', 'line-width': 5 } });
     });
@@ -65,26 +67,29 @@ export default function liveMap ({geojson}) {
   }, []);
 
   useEffect(() => {
+    if (!map.current || !geojson || geojson.features.length === 0) return;
 
-    if (!map.current) return;
-
-    if (marker.current && map.current && geojson.features.length > 0) {
-      popup.current.remove();
-      
-      const len = geojson.features.length - 1;
-      const lat = parseFloat(geojson.features[len].geometry.coordinates[1]);
-      const lng = parseFloat(geojson.features[len].geometry.coordinates[0]);
-
-      marker.current.setLngLat([lng, lat]);
-      map.current.flyTo({ center: [lng, lat], speed: 0.5 });
-      
-      if (!map.current.isStyleLoaded()) {return;}
-      else {
-        map.current.getSource("route").setData(lineString(geojson));
+    const updateSource = () => {
+      const source = map.current.getSource('route');
+      if (source) {
+        source.setData(lineString(geojson));
       }
-    }
-  },[geojson]);
 
+      popup.current?.remove();
+
+      const last = geojson.features[geojson.features.length - 1];
+      const [lng, lat] = last.geometry.coordinates;
+      marker.current?.setLngLat([parseFloat(lng), parseFloat(lat)]);
+      map.current.flyTo({ center: [parseFloat(lng), parseFloat(lat)], speed: 0.5 });
+    };
+
+    if (map.current.isStyleLoaded()) {
+      updateSource();
+    } else {
+      map.current.once('load', updateSource);
+    }
+
+  }, [geojson]);
 
   return <div ref={mapContainer} style={{ width: '100%', height: '100%' }} />;
 }
