@@ -1,0 +1,17 @@
+:root {
+  --color-base:        #6f4e37;
+  --color-dark:        #4A2E1F;
+  --color-light:       #C9A78E;
+  --color-complement:  #3A8D60;
+  --color-text:        #F2E7D5;
+ 
+  --color-sky:         #5B8FA8;
+  --color-warning:     #D4813A;
+  --color-moss:        #7A9E6F;
+
+  --text-primary:      var(--color-text);
+  --text-secondary:    var(--color-light);
+  --text-inverse:      var(--color-dark);
+
+  
+}
