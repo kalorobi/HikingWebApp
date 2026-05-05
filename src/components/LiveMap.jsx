@@ -31,8 +31,8 @@ export default function liveMap ({geojson}) {
     map.current = new maplibregl.Map({
       container: mapContainer.current,
       style: 'https://tiles.openfreemap.org/styles/liberty', 
-      center: [19.0402, 47.4979],
-      zoom: 14
+      center: agasvar,
+      zoom: 12
     });
 
     map.current.dragRotate.disable();
@@ -45,16 +45,8 @@ export default function liveMap ({geojson}) {
     });
 
     marker.current = new maplibregl.Marker({ color: "#FF0000" })
-    .setLngLat([19.826587,47.9263058])
+    .setLngLat([0,0])
     .addTo(map.current);
-
-    popup.current = new maplibregl.Popup({closeButton: true,closeOnClick: false})
-    .setLngLat(agasvar)
-    .setHTML(`
-      <div>Túra még nem indult el.</div>
-    `).addTo(map.current);
-
-    map.current.flyTo({ center: agasvar, speed: 0.8 });
 
     return () => {
       if (map.current) {map.current.remove(); map.current = null;}
@@ -62,20 +54,27 @@ export default function liveMap ({geojson}) {
   }, []);
 
   useEffect(() => {
-    if (!map.current || !geojson || geojson.features.length === 0) return;
+    if (!map.current || !geojson) return;
 
     const updateSource = () => {
-      const source = map.current.getSource('route');
-      if (source) {
-        source.setData(lineString(geojson));
+      if (geojson.features.length === 0) {
+        popup.current = new maplibregl.Popup({closeButton: true,closeOnClick: false})
+        .setLngLat(agasvar)
+        .setHTML(`<div>Túra még nem indult el.</div>`).addTo(map.current);
+        map.current.flyTo({ center: agasvar, zoom: 14, speed: 0.8 });
       }
+      else {
+        const source = map.current.getSource('route');
+        if (source) {
+          source.setData(lineString(geojson));
+        }
+        popup.current?.remove();
 
-      popup.current?.remove();
-
-      const last = geojson.features[geojson.features.length - 1];
-      const [lng, lat] = last.geometry.coordinates;
-      marker.current?.setLngLat([parseFloat(lng), parseFloat(lat)]);
-      map.current.flyTo({ center: [parseFloat(lng), parseFloat(lat)], speed: 0.5 });
+        const last = geojson.features[geojson.features.length - 1];
+        const [lng, lat] = last.geometry.coordinates;
+        marker.current?.setLngLat([parseFloat(lng), parseFloat(lat)]);
+        map.current.flyTo({ center: [parseFloat(lng), parseFloat(lat)], zoom: 14, speed: 0.5 });
+      }
     };
 
     if (map.current.isStyleLoaded()) {
