@@ -1,0 +1,23 @@
+.maplibregl-popup-content{
+    background: var(--color-dark);
+    color: var(--color-text);
+    font-family: var(--font-body);
+    font-size: var(--text-md);
+    padding: var(--space-2) var(--space-2);
+
+}
+.maplibregl-popup-anchor-bottom .maplibregl-popup-tip {
+  border-top-color: var(--color-dark);
+}
+.maplibregl-popup-anchor-top .maplibregl-popup-tip {
+  border-bottom-color: var(--color-dark);
+}
+.maplibregl-popup-anchor-left .maplibregl-popup-tip {
+  border-right-color: var(--color-dark);
+}
+.maplibregl-popup-anchor-right .maplibregl-popup-tip {
+  border-left-color: var(--color-dark);
+}
+.maplibregl-popup-close-button{
+    color: var(--color-warning);
+}

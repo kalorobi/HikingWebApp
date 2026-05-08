@@ -1,5 +1,8 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Home from './pages/Home';
 import Live from './pages/Live';
+
+import './base.css';
 
 function App() {
   return (
@@ -7,7 +10,7 @@ function App() {
       <Routes>
         <Route path="/live" element={<Live />} />
         <Route path="/live/:user" element={<Live />} />
-        <Route path="/" element={<h1>Hamarosan</h1>} />
+        <Route path="/" element={<Home />} />
       </Routes>
     </Router>
   );
