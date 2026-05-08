@@ -1,12 +1,12 @@
 import React, { useEffect, useRef, useReducer, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { supabase } from '../services/supabaseClient';
-import LiveMap from '../components/LiveMap';
+import LiveMap from '../components/map/LiveMap';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { geojsonSupabase, subscribeSupabase } from '../services/LiveSupabase'; 
-import Login from '../components/Login'
-import { LiveStatus } from '../components/StatusDisplay';
+import Login from '../components/login/Login'
+import { LiveStatus } from '../components/map/StatusDisplay';
 
 const initialState = {
   geojson: {type: "FeatureCollection",features: []},
