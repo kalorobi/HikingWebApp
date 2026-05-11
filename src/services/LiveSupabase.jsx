@@ -70,3 +70,23 @@ export function subscribeSupabase(dispatch) {
 
     return channel;
 }
+
+export async function planSupabase(user_id) {
+  if(!user_id) {return {type: "FeatureCollection",features : []}}
+
+  const { data, error} = await supabase
+  .from('live_plan_routes')
+  .select('plan_name, description, link, mountain, geojson')
+  .eq('user_id', user_id)
+  .eq('is_active', true)
+  .eq('is_ready', true)
+  .order('created_at', { ascending: false }); 
+
+  if (error) {
+    console.error(error);
+    throw error;
+  }
+
+  return data[0].geojson;
+
+}
