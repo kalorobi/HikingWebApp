@@ -12,7 +12,8 @@ export default function Login ({currentAuth, setAuth}) {
     e.preventDefault();
     if (currentAuth.user && currentAuth.key) {
       if (currentAuth.key === liveKey) {
-        navigate(`/live/${currentAuth.user}?key=${encodeURIComponent(currentAuth.key)}`);
+        setAuth({...currentAuth, isOk: true});
+        //navigate(`/live/${currentAuth.user}?key=${encodeURIComponent(currentAuth.key)}`);
       }
       else {
         setError({...error, key: "Hibás kulcs"});
@@ -34,7 +35,7 @@ export default function Login ({currentAuth, setAuth}) {
         />
         <div>{error.key}</div>
         <input 
-          type="password" placeholder="Biztonsági kulcs:" 
+          type="password" placeholder="Jelszó:" 
           value={currentAuth.key} onChange={e => setAuth({...currentAuth, key: e.target.value})}
           className='input'
         />
