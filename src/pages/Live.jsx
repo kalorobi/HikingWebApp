@@ -60,7 +60,8 @@ const Live = () => {
     if ((user && key) && (key === liveKey)) {
       setAuth({ user: user, key: key, isOk: true });
     }
-  }, [user, key]);
+  //}, [user, key]);
+  }, []);
 
 
   useEffect(() => {
@@ -78,7 +79,6 @@ const Live = () => {
     }
 
     load();
-
     return () => {
       if (liveChannel.current) {
         liveChannel.current.unsubscribe();
