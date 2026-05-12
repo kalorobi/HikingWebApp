@@ -2,6 +2,8 @@ import React, { useEffect, useRef } from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import './LiveMap.css';
+import styles from './LayerStyle.json'
+import mokus from '../../assets/ikons/mokus.svg'
 
 export default function liveMap ({geojson, planGeojson}) {
 
@@ -11,22 +13,17 @@ export default function liveMap ({geojson, planGeojson}) {
   const popup = useRef(null);
   const agasvar = [19.826587,47.9263058];
 
-  // geojson pontonkent erkezik
+  // geojson pontonkent erkezik, mert
   // benne vannak az informaciok gsm, battery, idopontok,
   // de az utvonal kirajzolashoz linestring szukseges.
   function lineString (geoJson) {
     if(geoJson.features.length === 0) return geoJson;
     return {
-        type: "FeatureCollection",
-        properties: {},
-        features: [{
-          type: "Feature",
-          geometry : {
-            type: "LineString",
-            coordinates : geoJson.features.map(f => f.geometry.coordinates)
-          }
-        }]
-      }
+        type: "FeatureCollection",properties: {},
+        features: [{type: "Feature", geometry : {type: "LineString",
+          coordinates : geoJson.features.map(f => f.geometry.coordinates)
+        }}]
+    }
   }
   
   // Terkep inicializalas
@@ -36,8 +33,7 @@ export default function liveMap ({geojson, planGeojson}) {
     map.current = new maplibregl.Map({
       container: mapContainer.current,
       style: 'https://tiles.openfreemap.org/styles/liberty', 
-      center: agasvar,
-      zoom: 12
+      ...styles.startPozition
     });
     // Terkep forgatas tiltas
     map.current.dragRotate.disable();
@@ -46,17 +42,18 @@ export default function liveMap ({geojson, planGeojson}) {
     map.current.on('load', () => {
 
       // tervezett utvonal reteg
-      map.current.addSource('planRoute', { type: 'geojson', data: { type: "FeatureCollection", features: [] }});
-      map.current.addLayer({ id: 'planRoute-layer', type: 'line', source: 'planRoute', 
-        paint: { 'line-color': '#c71898', 'line-width': 5 } });
+      map.current.addSource('planRoute', { type: 'geojson', data: { ...styles.geojson }});
+      map.current.addLayer({ source: 'planRoute', ...styles.plan });
 
       // aktualis utvonal reteg
-      map.current.addSource('route', { type: 'geojson', data: { type: "FeatureCollection", features: [] }});
-      map.current.addLayer({ id: 'route-layer', type: 'line', source: 'route', 
-        paint: { 'line-color': '#c7f21c', 'line-width': 5 } });
+      map.current.addSource('route', { type: 'geojson', data: { ...styles.geojson }});
+      map.current.addLayer({ source: 'route', ...styles.route });
     });
 
-    marker.current = new maplibregl.Marker({ color: "#FF0000" })
+    const el = document.createElement('img');
+    el.src = mokus; el.style.width = '40px';el.style.height = '34px';
+    el.style.cursor = 'pointer';
+    marker.current = new maplibregl.Marker({ element: el })
     .setLngLat([0,0])
     .addTo(map.current);
 
@@ -76,7 +73,7 @@ export default function liveMap ({geojson, planGeojson}) {
         popup.current = new maplibregl.Popup({closeButton: true,closeOnClick: false})
         .setLngLat(agasvar)
         .setHTML(`<div>Túra még nem indult el.</div>`).addTo(map.current);
-        map.current.flyTo({ center: agasvar, zoom: 14, speed: 0.8 });
+        map.current.flyTo({ ...styles.startPozition, speed: 0.8 });
       }
       //tura mar elindult
       else {
