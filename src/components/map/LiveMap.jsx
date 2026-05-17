@@ -5,7 +5,7 @@ import './LiveMap.css';
 import styles from './LayerStyle.json'
 import mokus from '../../assets/ikons/mokus.svg'
 
-export default function liveMap ({geojson, planGeojson}) {
+export default function LiveMap ({geojson, planGeojson}) {
 
   const mapContainer = useRef(null);
   const map = useRef(null);
@@ -51,7 +51,7 @@ export default function liveMap ({geojson, planGeojson}) {
     });
 
     const el = document.createElement('img');
-    el.src = mokus; el.style.width = '40px';el.style.height = '34px';
+    el.src = mokus; el.style.width = '60px';el.style.height = '51px';
     el.style.cursor = 'pointer';
     marker.current = new maplibregl.Marker({ element: el })
     .setLngLat([0,0])

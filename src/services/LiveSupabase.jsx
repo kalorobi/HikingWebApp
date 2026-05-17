@@ -42,6 +42,8 @@ export async function geojsonSupabase(user) {
   };
 }
 
+// Supabase realtime feliratkozas
+// A Lucus altal kuldott adat realtime
 export function subscribeSupabase(dispatch) {
 
   const channel = supabase
@@ -66,6 +68,11 @@ export function subscribeSupabase(dispatch) {
         type: "SET_SUBSCRIBE_STATUS",
         payload : status
       });
+    });
+
+    // Telefon aktivitas figyeles
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') console.log("VISIBLE");
     });
 
     return channel;

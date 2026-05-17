@@ -6,12 +6,12 @@
     "plan": {
     "id": "planRoute-layer",
     "type": "line", 
-    "paint": { "line-color": "#00f21c", "line-width": 5 }
+    "paint": { "line-color": "#D4813A", "line-width": 5 }
   },
   "route": {
     "id": "route-layer",
     "type": "line", 
-    "paint": { "line-color": "#c7f21c", "line-width": 5 }
+    "paint": { "line-color": "#3A8D60", "line-width": 5 }
   },
   "geojson": {
     "type": "FeatureCollection", "features": [] 

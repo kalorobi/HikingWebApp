@@ -6,7 +6,8 @@ import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { geojsonSupabase, planSupabase, subscribeSupabase } from '../services/LiveSupabase'; 
 import Login from '../components/login/Login'
-import { LiveStatus } from '../components/map/StatusDisplay';
+import LiveNavbar from '../components/map/LiveNavbar';
+import './Live.css';
 
 const initialState = {
   geojson: {type: "FeatureCollection",features: []},
@@ -18,31 +19,17 @@ const initialState = {
 function reducer(state, action) {
   switch (action.type) {
     case "SET_DATA":
-      return {
-        ...state,
-        geojson: action.payload,
-      };
+      return {...state, geojson: action.payload,};
     case "SET_PLAN":
-      return {
-        ...state,
-        planGeojson: action.payload,
-      };
-
+      return {...state, planGeojson: action.payload,};
     case "ADD_POINT": {
       let features;
       features = [...state.geojson.features, action.payload];
-      return {
-        ...state,geojson: {...state.geojson,features}
-      }
-    };
-
+      return {...state, geojson: {...state.geojson,features}}};
     case "SET_SUBSCRIBE_STATUS": {
-      return {...state, realTimeStatus: action.payload}
-    }
+      return {...state, realTimeStatus: action.payload}}
 
-    case "ERROR": return {...state,
-        error: action.payload,
-      };
+    case "ERROR": return {...state, error: action.payload,};
 
     default:
       return state;
@@ -104,10 +91,10 @@ const Live = () => {
   }, [auth.isOk]);
 
   return (
-    <div style={{ width: '100%', height: '100vh' }}>
-      {!auth.isOk && (<Login currentAuth={auth} setAuth={setAuth} />)}
-      <LiveStatus status={state.realTimeStatus} />
-      <LiveMap geojson={state.geojson} planGeojson={state.planGeojson} />
+    <div className='livePage'>
+        <LiveNavbar options={{realtime: state.realTimeStatus, user: auth.user, isOk: auth.isOk}}/>
+        <LiveMap geojson={state.geojson} planGeojson={state.planGeojson}/>
+        {!auth.isOk && (<Login currentAuth={auth} setAuth={setAuth} />)}
     </div>
   );
 

@@ -61,6 +61,8 @@
   --space-16:  4rem;
   --space-20:  5rem;
   --space-24:  6rem;
+
+  --navbar-height: 48px;
 }
 
 *, *::before, *::after {

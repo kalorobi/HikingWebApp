@@ -1,0 +1,7 @@
+.statusDisplay { 
+    z-index: 100;
+    bottom: 10px;
+    left: 10px;
+    position: fixed; 
+    border-radius: var(--border-radius-md);
+};
