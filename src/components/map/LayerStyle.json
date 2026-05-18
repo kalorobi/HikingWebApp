@@ -1,0 +1,19 @@
+{
+    "startPozition" : {
+        "center" : [19.826587,47.9263058],
+        "zoom" : 12
+    },
+    "plan": {
+    "id": "planRoute-layer",
+    "type": "line", 
+    "paint": { "line-color": "#D4813A", "line-width": 5 }
+  },
+  "route": {
+    "id": "route-layer",
+    "type": "line", 
+    "paint": { "line-color": "#3A8D60", "line-width": 5 }
+  },
+  "geojson": {
+    "type": "FeatureCollection", "features": [] 
+  }
+}
