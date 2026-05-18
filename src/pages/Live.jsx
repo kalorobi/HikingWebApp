@@ -1,15 +1,17 @@
 import React, { useEffect, useRef, useReducer, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { supabase } from '../services/supabaseClient';
-import LiveMap from '../components/LiveMap';
+import LiveMap from '../components/map/LiveMap';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { geojsonSupabase, subscribeSupabase } from '../services/LiveSupabase'; 
-import Login from '../components/Login'
-import { LiveStatus } from '../components/StatusDisplay';
+import { geojsonSupabase, planSupabase, subscribeSupabase } from '../services/LiveSupabase'; 
+import Login from '../components/login/Login'
+import LiveNavbar from '../components/map/LiveNavbar';
+import './Live.css';
 
 const initialState = {
   geojson: {type: "FeatureCollection",features: []},
+  planGeojson: {type: "FeatureCollection",features: []},
   error: null,
   realTimeStatus: "CONNECTING"
 };
@@ -17,26 +19,17 @@ const initialState = {
 function reducer(state, action) {
   switch (action.type) {
     case "SET_DATA":
-      return {
-        ...state,
-        geojson: action.payload,
-      };
-
+      return {...state, geojson: action.payload,};
+    case "SET_PLAN":
+      return {...state, planGeojson: action.payload,};
     case "ADD_POINT": {
       let features;
       features = [...state.geojson.features, action.payload];
-      return {
-        ...state,geojson: {...state.geojson,features}
-      }
-    };
-
+      return {...state, geojson: {...state.geojson,features}}};
     case "SET_SUBSCRIBE_STATUS": {
-      return {...state, realTimeStatus: action.payload}
-    }
+      return {...state, realTimeStatus: action.payload}}
 
-    case "ERROR": return {...state,
-        error: action.payload,
-      };
+    case "ERROR": return {...state, error: action.payload,};
 
     default:
       return state;
@@ -60,16 +53,26 @@ const Live = () => {
     if ((user && key) && (key === liveKey)) {
       setAuth({ user: user, key: key, isOk: true });
     }
-  }, [user, key]);
+  //}, [user, key]);
+  }, []);
 
 
   useEffect(() => {
      if (!auth.isOk) return;
 
     async function load() {
+      //beolvassa az eddig megtett utvonalat, ha van
+      //ha meg nem indult el a tura ures geojson erkezik
       try {
         const geojson = await geojsonSupabase(auth.user);
         dispatch({ type: "SET_DATA", payload: geojson });
+      } catch (err) {
+        dispatch({ type: "ERROR", payload: err.message });
+      }
+      //beolvassa a tervezett utvonalat, ha van
+      try {
+        const planGeojson = await planSupabase(2);
+        dispatch({ type: "SET_PLAN", payload: planGeojson });
       } catch (err) {
         dispatch({ type: "ERROR", payload: err.message });
       }
@@ -78,7 +81,6 @@ const Live = () => {
     }
 
     load();
-
     return () => {
       if (liveChannel.current) {
         liveChannel.current.unsubscribe();
@@ -89,10 +91,10 @@ const Live = () => {
   }, [auth.isOk]);
 
   return (
-    <div style={{ width: '100%', height: '100vh' }}>
-      {!auth.isOk && (<Login currentAuth={auth} setAuth={setAuth} />)}
-      <LiveStatus status={state.realTimeStatus} />
-      <LiveMap geojson={state.geojson} />
+    <div className='livePage'>
+        <LiveNavbar options={{realtime: state.realTimeStatus, user: auth.user, isOk: auth.isOk}}/>
+        <LiveMap geojson={state.geojson} planGeojson={state.planGeojson}/>
+        {!auth.isOk && (<Login currentAuth={auth} setAuth={setAuth} />)}
     </div>
   );
 
