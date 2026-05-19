@@ -13,7 +13,8 @@ const initialState = {
   geojson: {type: "FeatureCollection",features: []},
   planGeojson: {type: "FeatureCollection",features: []},
   error: null,
-  realTimeStatus: "CONNECTING"
+  realTimeStatus: "CONNECTING",
+  realtimeCount: 0,
 };
 
 function reducer(state, action) {
@@ -48,12 +49,28 @@ const Live = () => {
   });
   const [state, dispatch] = useReducer(reducer, initialState);
   const liveChannel = useRef(null);
+  const [visibleCount, setVisibleCount] = useState(0);
 
   useEffect(() => {
     if ((user && key) && (key === liveKey)) {
       setAuth({ user: user, key: key, isOk: true });
     }
   //}, [user, key]);
+  }, []);
+
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        console.log("VISIBLE");
+        setVisibleCount(prev => prev + 1);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
   }, []);
 
 
@@ -92,7 +109,7 @@ const Live = () => {
 
   return (
     <div className='livePage'>
-        <LiveNavbar options={{realtime: state.realTimeStatus, user: auth.user, isOk: auth.isOk}}/>
+        <LiveNavbar options={{realtime: state.realTimeStatus, count: visibleCount, user: auth.user, isOk: auth.isOk}}/>
         <LiveMap geojson={state.geojson} planGeojson={state.planGeojson}/>
         {!auth.isOk && (<Login currentAuth={auth} setAuth={setAuth} />)}
     </div>
