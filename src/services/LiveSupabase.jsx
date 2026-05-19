@@ -1,3 +1,4 @@
+import React, { useEffect, useRef, useReducer, useState } from 'react';
 import { supabase } from './supabaseClient';
 
 export async function geojsonSupabase(user) {
@@ -5,7 +6,7 @@ export async function geojsonSupabase(user) {
   if(!user) {return {type: "FeatureCollection",features : []}}
   
   const today = new Date(); today.setHours(0, 0, 0, 0);
-
+  
   const { data, error} = await supabase
   .from('coordinates')
   .select('lat, lng, mode')
@@ -45,7 +46,6 @@ export async function geojsonSupabase(user) {
 // Supabase realtime feliratkozas
 // A Lucus altal kuldott adat realtime
 export function subscribeSupabase(dispatch) {
-
   const channel = supabase
     .channel("coordinates-realtime")
     .on(
@@ -68,11 +68,6 @@ export function subscribeSupabase(dispatch) {
         type: "SET_SUBSCRIBE_STATUS",
         payload : status
       });
-    });
-
-    // Telefon aktivitas figyeles
-    document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible') console.log("VISIBLE");
     });
 
     return channel;
