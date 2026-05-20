@@ -51,21 +51,26 @@ const Live = () => {
   const liveChannel = useRef(null);
   const [visibleCount, setVisibleCount] = useState(0);
 
+  /*
   useEffect(() => {
     if ((user && key) && (key === liveKey)) {
       setAuth({ user: user, key: key, isOk: true });
     }
   //}, [user, key]);
   }, []);
+  */
 
+  // Mobilon realtime potlas
   useEffect(() => {
     const handleVisibility = () => {
       if (document.visibilityState === 'visible') {
-        console.log("VISIBLE");
+        // Itt kell megvalositani az adatok potlasat
+        // ha szukseges #3
         setVisibleCount(prev => prev + 1);
       }
     };
 
+    // Aktiv ujra a bongeszo
     document.addEventListener('visibilitychange', handleVisibility);
 
     return () => {
