@@ -4,30 +4,19 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import './LiveMap.css';
 import styles from './LayerStyle.json';
 import mokus from '../../assets/ikons/mokus.svg';
-import { LocateFixed, Locate } from './MapControls';
+import car from '../../assets/ikons/car.svg';
+import { LocateFixed, Locate } from './MapIcons';
 
 export default function LiveMap ({geojson, planGeojson}) {
 
   const [is_center, set_is_center] = useState(true);
   const mapContainer = useRef(null);
   const map = useRef(null);
+  const actPozition = useRef(null);
   const marker = useRef(null);
   const icon = useRef(null);
   const popup = useRef(null);
   const center = useRef(...styles.startPozition.center);
-
-  // geojson pontonkent erkezik, mert
-  // benne vannak az informaciok gsm, battery, idopontok,
-  // de az utvonal kirajzolashoz linestring szukseges.
-  function lineString (geoJson) {
-    if(geoJson.features.length === 0) return geoJson;
-    return {
-        type: "FeatureCollection",properties: {},
-        features: [{type: "Feature", geometry : {type: "LineString",
-          coordinates : geoJson.features.map(f => f.geometry.coordinates)
-        }}]
-    }
-  }
   
   // Terkep inicializalas
   useEffect(() => {
@@ -92,6 +81,7 @@ export default function LiveMap ({geojson, planGeojson}) {
       //tura mar elindult
       else {
         const source = map.current.getSource('route');
+
         if (source) {
           source.setData(lineString(geojson));
         }
@@ -100,8 +90,12 @@ export default function LiveMap ({geojson, planGeojson}) {
         popup.current?.remove();
 
         // Aktualis pont megjelenites
-        const last = geojson.features[geojson.features.length - 1];
-        const [lng, lat] = last.geometry.coordinates;
+        actPozition.current = geojson.features[geojson.features.length - 1].geometry.coordinates;
+        // Ikon kivalasztas mokus v. auto
+        geojson.features[geojson.features.length-1].properties.mode === 'hiking'
+          ?icon.current.src = mokus:icon.current.src = car;
+          
+        const [lng, lat] = actPozition.current;
         marker.current?.setLngLat([parseFloat(lng), parseFloat(lat)]);
         map.current.flyTo({ center: [parseFloat(lng), parseFloat(lat)], zoom: 14, speed: 0.8 });
         set_is_center(true);
@@ -116,6 +110,25 @@ export default function LiveMap ({geojson, planGeojson}) {
     }
 
   }, [geojson]);
+
+  // geojson pontonkent erkezik, mert
+  // benne vannak az informaciok gsm, battery, idopontok,
+  // de az utvonal kirajzolashoz linestring szukseges.
+  function lineString(geoJson) {
+  if (geoJson.features.length === 0) return geoJson;
+  return {
+    type: "FeatureCollection",
+    features: [{
+      type: "Feature",
+      geometry: {
+        type: "LineString",
+        coordinates: geoJson.features
+          .filter((f) => f.properties.mode === 'hiking')
+          .map((f) => f.geometry.coordinates)
+      }
+    }]
+  };
+}
 
   // Tervezett utvonal
   useEffect(() => {
@@ -141,7 +154,7 @@ export default function LiveMap ({geojson, planGeojson}) {
   function setCenter(){
     let lat = 0; let lng = 0;
     if(geojson.features.length != 0){
-      [lng, lat] = geojson.features[geojson.features.length-1].coordinates;
+      [lng, lat] = actPozition.current;
     }
     else {
       [lng, lat] = (styles.startPozition.center);
