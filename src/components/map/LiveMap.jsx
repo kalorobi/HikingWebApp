@@ -114,19 +114,36 @@ export default function LiveMap ({geojson, planGeojson}) {
   // geojson pontonkent erkezik, mert
   // benne vannak az informaciok gsm, battery, idopontok,
   // de az utvonal kirajzolashoz linestring szukseges.
-  function lineString(geoJson) {
+function lineString(geoJson) {
   if (geoJson.features.length === 0) return geoJson;
+
+  const hikingSegments = [];
+  let currentSegment = [];
+
+  for (const feature of geoJson.features) {
+    if (feature.properties.mode === 'hiking') {
+      currentSegment.push(feature.geometry.coordinates);
+    } else {
+      if (currentSegment.length > 0) {
+        hikingSegments.push(currentSegment);
+        currentSegment = [];
+      }
+    }
+  }
+
+  if (currentSegment.length > 0) {
+    hikingSegments.push(currentSegment);
+  }
+
   return {
     type: "FeatureCollection",
-    features: [{
+    features: hikingSegments.map((coordinates) => ({
       type: "Feature",
       geometry: {
         type: "LineString",
-        coordinates: geoJson.features
-          .filter((f) => f.properties.mode === 'hiking')
-          .map((f) => f.geometry.coordinates)
+        coordinates,
       }
-    }]
+    })),
   };
 }
 
