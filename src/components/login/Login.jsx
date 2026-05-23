@@ -13,6 +13,7 @@ export default function Login ({currentAuth, setAuth}) {
     if (currentAuth.user && currentAuth.key) {
       if (currentAuth.key === liveKey) {
         setAuth({...currentAuth, isOk: true});
+        navigate(`/live/${currentAuth.user}?key=${encodeURIComponent(currentAuth.key)}`, { replace: true });
         //navigate(`/live/${currentAuth.user}?key=${encodeURIComponent(currentAuth.key)}`);
       }
       else {
