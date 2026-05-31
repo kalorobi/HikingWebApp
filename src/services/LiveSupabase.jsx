@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useReducer, useState } from 'react';
-import { supabase } from './supabaseClient';
+import { supabase } from './SupabaseClient';
 
 export async function geojsonSupabase(user) {
 
