@@ -1,125 +1,32 @@
-import React, { useEffect, useRef, useReducer, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
-import { supabase } from '../services/supabaseClient';
 import LiveMap from '../components/map/LiveMap';
-import maplibregl from 'maplibre-gl';
-import 'maplibre-gl/dist/maplibre-gl.css';
-import { geojsonSupabase, planSupabase, subscribeSupabase } from '../services/LiveSupabase'; 
 import Login from '../components/login/Login'
-import LiveNavbar from '../components/map/LiveNavbar';
-import './Live.css';
+import { useLiveCoordinates } from '../services/LiveSupabese';
 
-const initialState = {
-  geojson: {type: "FeatureCollection",features: []},
-  planGeojson: {type: "FeatureCollection",features: []},
-  error: null,
-  realTimeStatus: "CONNECTING",
-  realtimeCount: 0,
-};
+import testgeojson from '../components/map/testgeo.json'
 
-function reducer(state, action) {
-  switch (action.type) {
-    case "SET_DATA":
-      return {...state, geojson: action.payload,};
-    case "SET_PLAN":
-      return {...state, planGeojson: action.payload,};
-    case "ADD_POINT": {
-      let features;
-      features = [...state.geojson.features, action.payload];
-      return {...state, geojson: {...state.geojson,features}}};
-    case "SET_SUBSCRIBE_STATUS": {
-      return {...state, realTimeStatus: action.payload}}
+export default function Live(){
 
-    case "ERROR": return {...state, error: action.payload,};
+    const { user } = useParams();
+    const [searchParams] = useSearchParams();
+    const urlKey = searchParams.get('key');
+    const [auth, setAuth] = useState({
+        user: user ?? null,
+        key: urlKey ?? null,
+        user_id: -1,
+        is_ok: false
+    });
+    const { geojson } = useLiveCoordinates(auth.user_id);
 
-    default:
-      return state;
-  }
+    useEffect(() => {
+        console.log(geojson)
+    },[geojson])
+
+    return (
+        <div style={{ width: '100%', height: '100vh' }}>
+            <LiveMap geojson={geojson} auth={auth}/>
+            {!auth.is_ok && (<Login auth={auth} setAuth={setAuth} />)}
+        </div>
+    )
 }
-
-const Live = () => {
-  const { user } = useParams();
-  const liveKey = import.meta.env.VITE_LIVE_KEY;
-  const [searchParams] = useSearchParams();
-  const key = searchParams.get('key');
-  const [auth, setAuth] = useState({
-    user: user || '',
-    key: key || '',
-    isOk: !!(user && key) && (key === liveKey)
-  });
-  const [state, dispatch] = useReducer(reducer, initialState);
-  const liveChannel = useRef(null);
-  const [visibleCount, setVisibleCount] = useState(0);
-
-  /*
-  useEffect(() => {
-    if ((user && key) && (key === liveKey)) {
-      setAuth({ user: user, key: key, isOk: true });
-    }
-  //}, [user, key]);
-  }, []);
-  */
-
-  // Mobilon realtime potlas
-  useEffect(() => {
-    const handleVisibility = () => {
-      if (document.visibilityState === 'visible') {
-        // Itt kell megvalositani az adatok potlasat
-        // ha szukseges #3
-        setVisibleCount(prev => prev + 1);
-      }
-    };
-
-    // Aktiv ujra a bongeszo
-    document.addEventListener('visibilitychange', handleVisibility);
-
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibility);
-    };
-  }, []);
-
-
-  useEffect(() => {
-     if (!auth.isOk) return;
-
-    async function load() {
-      //beolvassa az eddig megtett utvonalat, ha van
-      //ha meg nem indult el a tura ures geojson erkezik
-      try {
-        const geojson = await geojsonSupabase(auth.user);
-        dispatch({ type: "SET_DATA", payload: geojson });
-      } catch (err) {
-        dispatch({ type: "ERROR", payload: err.message });
-      }
-      //beolvassa a tervezett utvonalat, ha van
-      try {
-        const planGeojson = await planSupabase(2);
-        dispatch({ type: "SET_PLAN", payload: planGeojson });
-      } catch (err) {
-        dispatch({ type: "ERROR", payload: err.message });
-      }
-
-      if(!liveChannel.current) liveChannel.current = subscribeSupabase(dispatch);
-    }
-
-    load();
-    return () => {
-      if (liveChannel.current) {
-        liveChannel.current.unsubscribe();
-        liveChannel.current = null;
-      }
-    };
-
-  }, [auth.isOk]);
-
-  return (
-    <div className='livePage'>
-        <LiveNavbar options={{realtime: state.realTimeStatus, count: visibleCount, user: auth.user, isOk: auth.isOk}}/>
-        <LiveMap geojson={state.geojson} planGeojson={state.planGeojson}/>
-        {!auth.isOk && (<Login currentAuth={auth} setAuth={setAuth} />)}
-    </div>
-  );
-
-};
-
-export default Live;

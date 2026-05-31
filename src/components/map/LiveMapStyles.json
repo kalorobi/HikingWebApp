@@ -1,0 +1,13 @@
+{
+    "mapCenter": {"longitude": 19.826587,"latitude": 47.9263058,"zoom": 12},
+    "layers": [
+        {
+            "id": "openfreemap",
+            "style": "https://tiles.openfreemap.org/styles/bright"
+        },
+        {
+            "id": "maptiler",
+            "style": "https://api.maptiler.com/maps/019e0258-0d11-7b79-9578-c798695fef2d/style.json?key=VH076dhInJD78BfJ74yo"
+        }
+        ]
+}

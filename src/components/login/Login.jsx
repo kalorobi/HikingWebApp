@@ -1,45 +1,74 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
+import { useReducer } from "react";
+import { useNavigate } from 'react-router-dom';
+import { checkUser } from '../../services/LoginSupabase';
 import './Login.css';
 
-export default function Login ({currentAuth, setAuth}) {
+export default function Login({auth, setAuth}) {
 
-  const liveKey = import.meta.env.VITE_LIVE_KEY;
-  const [error, setError] = useState({user : "", key: ""});
+  const initialAuth = {...auth, error: ""};
   const navigate = useNavigate();
+  const [user, setUser] = useState(auth.user ?? '');
+  const [key, setKey] = useState(auth.key ?? '');
+  const [authLogin, dispatchAuth] = useReducer(authReducer, initialAuth);
+  function authReducer(state, action) {
+    switch (action.type) {
+      case "ERROR":
+        return {...state, error: action.payload.error};
+      case "SUCCESS":
+        return {...state, user_id: action.payload.user_id, user: action.payload.user, is_ok: true};
 
-  const handleLogin = (e) => {
-    e.preventDefault();
-    if (currentAuth.user && currentAuth.key) {
-      if (currentAuth.key === liveKey) {
-        setAuth({...currentAuth, isOk: true});
-        navigate(`/live/${currentAuth.user}?key=${encodeURIComponent(currentAuth.key)}`, { replace: true });
-        //navigate(`/live/${currentAuth.user}?key=${encodeURIComponent(currentAuth.key)}`);
-      }
-      else {
-        setError({...error, key: "Hibás kulcs"});
-      }
+      default: return state;
     }
-    else {
-      setError({...error, user: "User hiba"});
+  }
+
+ async function handleLogin (e) {
+    e.preventDefault();
+
+    if(!user || !key) {
+      dispatchAuth({type: "ERROR",payload: { error: "Hiányzó adatok" }});
+      return;
+    }
+
+    try {
+      const liveKey = import.meta.env.VITE_LIVE_KEY;
+      const live_user = await checkUser(user);
+
+      if (live_user?.id && key === liveKey) {
+        dispatchAuth({type: "SUCCESS",payload: { user_id: live_user.id, user: user }});
+      } else {
+        dispatchAuth({type: "ERROR",payload: { error: "Téves user vagy jelszó" }});
+      }
+
+    } catch (err) {
+      console.log(err);
+      dispatchAuth({type: "ERROR",payload: { error: "Adatbázis hiba" }});
     }
   };
+
+  useEffect(() => {
+    if(authLogin.is_ok){
+      setAuth({user_id: authLogin.user_id, user: authLogin.user, is_ok: true});
+      navigate(`/live/${authLogin.user}`, { replace: true });
+    }
+  },[authLogin.is_ok])
+
   return (
     <div className='overlay'>
       <form onSubmit={handleLogin} className='form'>
         <h4>Login:</h4>
-        <div>{error.user}</div>
         <input 
           type="text" placeholder="Túrázó:" 
-          value={currentAuth.user} onChange={e => setAuth({...currentAuth, user: e.target.value})}
+          value={user} onChange={e => setUser(e.target.value)}
           className='input'
         />
-        <div>{error.key}</div>
         <input 
           type="password" placeholder="Jelszó:" 
-          value={currentAuth.key} onChange={e => setAuth({...currentAuth, key: e.target.value})}
+          value={key} onChange={e => setKey(e.target.value)}
           className='input'
         />
+        <br/>
+        {authLogin.error !== "" && <div className='error'>{authLogin.error}</div>}
          <button type="submit" className='btn'>Belépés</button>
       </form>
     </div>
