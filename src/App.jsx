@@ -1,7 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Home from './pages/Home';
-
-import Live_2 from './pages/Live_2';
+import Live from './pages/Live';
 
 import './base.css';
 
@@ -9,8 +8,8 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/live2" element={<Live_2 />} />
-        <Route path="/live2/:user" element={<Live_2 />} />
+        <Route path="/live" element={<Live />} />
+        <Route path="/live/:user" element={<Live />} />
         <Route path="/" element={<Home />} />
       </Routes>
     </Router>

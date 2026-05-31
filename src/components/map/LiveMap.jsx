@@ -1,195 +1,126 @@
-import React, { useEffect, useRef, useState } from 'react';
-import maplibregl from 'maplibre-gl';
+import { act, useEffect, useRef, useState } from 'react';
+import {Map, Source, Layer, Marker, Popup} from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import './LiveMap.css';
-import styles from './LayerStyle.json';
+import mapStyles from './LiveMapStyles.json';
 import mokus from '../../assets/ikons/mokus.svg';
-import car from '../../assets/ikons/car.svg';
-import { LocateFixed, Locate } from './MapIcons';
+import car from '../../assets/ikons/car.svg'
+import { LocateFixed, Locate, MapLayer } from '../../assets/ikons/MapIcons';
 
-export default function LiveMap ({geojson, planGeojson}) {
-
-  const [is_center, set_is_center] = useState(true);
-  const mapContainer = useRef(null);
-  const map = useRef(null);
-  const actPozition = useRef(null);
-  const marker = useRef(null);
-  const icon = useRef(null);
-  const popup = useRef(null);
-  const center = useRef(...styles.startPozition.center);
+export default function LiveMap({geojson, auth}) {
   
-  // Terkep inicializalas
-  useEffect(() => {
-    if (map.current) return;
+  const [lastPoint, setLastPoint] = useState(null);
+  const mapRef = useRef(null);
+  const [showPopup, setShowPopup] = useState({
+    "show": true, 
+    "txt": "Túra még nem",
+    "longitude": 19.826587,
+    "latitude": 47.9263058
 
-    map.current = new maplibregl.Map({
-      container: mapContainer.current,
-      style: 'https://tiles.openfreemap.org/styles/liberty', 
-      ...styles.startPozition
-    });
-    // Terkep forgatas tiltas
-    map.current.dragRotate.disable();
-    map.current.touchZoomRotate.disableRotation(); 
+  });
+  const [zoom, setZoom] = useState(0);
+  const [is_center, setIs_center] = useState(true);
+  const [activeStyle, setActiveStyle] = useState(mapStyles.layers[0]);
+
+  useEffect(() => {
+
+    const hasPoint = geojson?.features?.some(
+      f => f.geometry?.type === 'Point'
+    );
+    if (hasPoint) {setShowPopup(prev => ({...prev, show:false}));}
     
-    map.current.on('load', () => {
+    const lastPointFeature = geojson?.features
+      ?.slice()
+      .reverse()
+      .find(f => f.geometry?.type === 'Point');
 
-      // tervezett utvonal reteg
-      map.current.addSource('planRoute', { type: 'geojson', data: { ...styles.geojson }});
-      map.current.addLayer({ source: 'planRoute', ...styles.plan });
+    if (!lastPointFeature) return;
 
-      // aktualis utvonal reteg
-      map.current.addSource('route', { type: 'geojson', data: { ...styles.geojson }});
-      map.current.addLayer({ source: 'route', ...styles.route });
-    });
+    setLastPoint({...lastPointFeature});
+  }, [geojson, auth]);
 
-    // Map elmozdulas figyeles ikoncsere miatt
-    map.current.on('moveend', (e) => {
-      if (e.originalEvent) {
-        set_is_center(false);
-      }
-    });
-
-    //icon inic
-    const el = document.createElement('img');
-    el.src = mokus; el.style.width = '60px';el.style.height = '51px';
-    el.style.cursor = 'pointer';
-    icon.current = el;
-
-    marker.current = new maplibregl.Marker({ element: el })
-    .setLngLat([0,0])
-    .addTo(map.current);
-
-    return () => {
-      if (map.current) {map.current.remove(); map.current = null;}
-    };
-  }, []);
-
-  // LIVE utvonal kezeles
   useEffect(() => {
-    if (!map.current || !geojson) return;
+    if (!lastPoint) return;
 
-    // Terkep betoltes miatt szukseges
-    const updateSource = () => {
-      //meg nincs turapont
-      if (geojson.features.length === 0) {
-        popup.current = new maplibregl.Popup({closeButton: true,closeOnClick: false})
-        .setLngLat(styles.startPozition.center)
-        .setHTML(`<div>Túra még nem indult el.</div>`).addTo(map.current);
-        map.current.flyTo({ ...styles.startPozition, speed: 0.8 });
-        set_is_center(true);
-      }
-      //tura mar elindult
-      else {
-        const source = map.current.getSource('route');
+    mapRef.current?.getMap().easeTo({
+      center: [lastPoint.geometry.coordinates[0], lastPoint.geometry.coordinates[1]],
+      zoom: 15, duration: 2000
+    });
+    setIs_center(true);
+  }, [lastPoint]);
 
-        if (source) {
-          source.setData(lineString(geojson));
-        }
+  function toCeneter(e){
+    if (!lastPoint) return;
 
-        // Tura meg nem indult el popup torles
-        popup.current?.remove();
-
-        // Aktualis pont megjelenites
-        actPozition.current = geojson.features[geojson.features.length - 1].geometry.coordinates;
-        // Ikon kivalasztas mokus v. auto
-        geojson.features[geojson.features.length-1].properties.mode === 'hiking'
-          ?icon.current.src = mokus:icon.current.src = car;
-          
-        const [lng, lat] = actPozition.current;
-        marker.current?.setLngLat([parseFloat(lng), parseFloat(lat)]);
-        map.current.flyTo({ center: [parseFloat(lng), parseFloat(lat)], zoom: 14, speed: 0.8 });
-        set_is_center(true);
-      }
-    };
-
-    // Terkep betolteset figyeli
-    if (map.current.isStyleLoaded()) {
-      updateSource();
-    } else {
-      map.current.once('load', updateSource);
-    }
-
-  }, [geojson]);
-
-  // geojson pontonkent erkezik, mert
-  // benne vannak az informaciok gsm, battery, idopontok,
-  // de az utvonal kirajzolashoz linestring szukseges.
-function lineString(geoJson) {
-  if (geoJson.features.length === 0) return geoJson;
-
-  const hikingSegments = [];
-  let currentSegment = [];
-
-  for (const feature of geoJson.features) {
-    if (feature.properties.mode === 'hiking') {
-      currentSegment.push(feature.geometry.coordinates);
-    } else {
-      if (currentSegment.length > 0) {
-        hikingSegments.push(currentSegment);
-        currentSegment = [];
-      }
-    }
-  }
-
-  if (currentSegment.length > 0) {
-    hikingSegments.push(currentSegment);
-  }
-
-  return {
-    type: "FeatureCollection",
-    features: hikingSegments.map((coordinates) => ({
-      type: "Feature",
-      geometry: {
-        type: "LineString",
-        coordinates,
-      }
-    })),
-  };
-}
-
-  // Tervezett utvonal
-  useEffect(() => {
-    const updatePlan = () => {
-      
-      if(planGeojson.features.length > 0){
-        const planSource = map.current.getSource('planRoute');
-        if (planSource) {
-          planSource.setData(planGeojson);
-        }
-      }
-    }
-
-    // Terkep betoltes figyeles
-    if (map.current.isStyleLoaded()) {
-      updatePlan();
-    } else {
-      map.current.once('load', updatePlan);
-    }
-  }, [planGeojson]);
-
-  // Gombnyomasra az aktualis poziciora repul
-  function setCenter(){
-    let lat = 0; let lng = 0;
-    if(geojson.features.length != 0){
-      [lng, lat] = actPozition.current;
-    }
-    else {
-      [lng, lat] = (styles.startPozition.center);
-    }
-    map.current.flyTo({ center: [parseFloat(lng), parseFloat(lat)], zoom: 15, speed: 0.5 });
-    set_is_center(true);
+    mapRef.current?.getMap().easeTo({
+      center: [lastPoint.geometry.coordinates[0], lastPoint.geometry.coordinates[1]],
+      zoom: 15, duration: 2000
+    });
+    setIs_center(true);
   }
 
   return (
-    <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-      <div ref={mapContainer} style={{ width: '100%', height: '100%' }} />
+    <div style={{ position: 'relative', width: '100vw', height: '100vh' }}>
+    <Map
+      reuseMaps
+      ref={mapRef}
+      onMoveEnd={(e) => {if (e.originalEvent) {setIs_center(false);}}}
+      onZoom={(e) => {setZoom(e.viewState.zoom);}}
+      initialViewState={{ ...mapStyles.mapCenter }}
+      style={{ width: '100%', height: '100%' }}
+      mapStyle={activeStyle.style}
+    >
+    <Source id="planned-source" type="geojson" data={geojson}>
+      <Layer id="planned" type="line"
+        filter={['==', ['get', 'type'], 'planned']}
+        paint={{ 'line-color': '#D4813A','line-width': 3}}
+      />
+    </Source>
+    <Source id="live-source" type="geojson" data={geojson}>
+      <Layer id="live" type="line"
+        filter={['==', ['get', 'type'], 'live']}
+        paint={{ 'line-color': '#3A8D60','line-width': 3}}
+      />
+    </Source>
+    {showPopup.show && (
+      <Popup
+        longitude={showPopup.longitude}
+        latitude={showPopup.latitude}
+        anchor="bottom"
+        onClose={() => setShowPopup(prev => ({...prev, show: false}))}
+      >
+        <div>
+          {showPopup.txt}
+        </div>
+      </Popup>
+    )}
+    {lastPoint && (
+      <Marker
+        longitude={lastPoint.geometry.coordinates[0]}
+        latitude={lastPoint.geometry.coordinates[1]}
+      >
+        <img src={
+          lastPoint.properties.mode === 'hiking'
+            ? mokus
+            : car
+          } alt="plane" width={60} height={51}/>
+      </Marker>
+    )}
+    </Map>
 
-      <div style={{position: 'absolute',top: 10,right: 10,display: 'flex',flexDirection: 'column',gap: 8}}>
-        <button style={{ padding: 0, lineHeight: 0 }} onClick={setCenter}>
+     <div style={{position: 'absolute', right: 16, top: 16, display: 'flex',flexDirection: 'column',
+        gap: 8, zIndex: 10}}>
+        <button style={{ padding: 0, lineHeight: 0 }} onClick={toCeneter}>
           {is_center ? <LocateFixed /> : <Locate />}
         </button>
-      </div>
-
+        <button style={{ padding: 0, lineHeight: 0 }} onClick={() => {
+          activeStyle.id === "openfreemap" ? 
+            setActiveStyle(mapStyles.layers[1]) :  setActiveStyle(mapStyles.layers[0]);          
+        }}>
+          <MapLayer />
+        </button>
+        <div style={{fontSize: 10, align: 'center', padding: 2, color: '#6f4e37', backgroundColor: '#ffffff'}}>{zoom.toFixed(1)}</div>
+    </div>
     </div>
   );
 }

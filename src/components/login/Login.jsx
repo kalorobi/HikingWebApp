@@ -49,7 +49,7 @@ export default function Login({auth, setAuth}) {
   useEffect(() => {
     if(authLogin.is_ok){
       setAuth({user_id: authLogin.user_id, user: authLogin.user, is_ok: true});
-      navigate(`/live2/${authLogin.user}`, { replace: true });
+      navigate(`/live/${authLogin.user}`, { replace: true });
     }
   },[authLogin.is_ok])
 
