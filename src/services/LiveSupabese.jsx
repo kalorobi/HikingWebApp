@@ -16,7 +16,6 @@ export function useLiveCoordinates(user_id) {
         coordinates: [row.lng, row.lat].filter(v => v !== null),
       },
       properties: {
-        type: 'live',
         created_at: row.created_at,
         mode: row.mode ?? 'car',
         gsm: row.gsm ?? null,
@@ -137,7 +136,7 @@ export function useLiveCoordinates(user_id) {
               coordinates: plannedCoords,
             },
             properties: {
-              type: 'planned',
+              routeType: 'planned',
               plan_name: plannedRoute?.plan_name,
               mountain: plannedRoute?.mountain,
               description: plannedRoute?.description,
@@ -154,7 +153,7 @@ export function useLiveCoordinates(user_id) {
               coordinates: liveLineCoords,
             },
             properties: {
-              type: 'live',
+              routeType: 'live',
             },
           }]
         : []),
