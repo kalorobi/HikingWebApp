@@ -64,6 +64,8 @@ export default function LiveMap({geojson, auth}) {
     <Map
       reuseMaps
       ref={mapRef}
+      dragRotate={false}
+      touchZoomRotate={false}
       onMoveEnd={(e) => {if (e.originalEvent) {setIs_center(false);}}}
       onZoom={(e) => {setZoom(e.viewState.zoom);}}
       initialViewState={{ ...mapStyles.mapCenter }}
@@ -72,14 +74,18 @@ export default function LiveMap({geojson, auth}) {
     >
     <Source id="planned-source" type="geojson" data={geojson}>
       <Layer id="planned" type="line"
-        filter={['==', ['get', 'type'], 'planned']}
+        filter={['==', ['get', 'routeType'], 'planned']}
         paint={{ 'line-color': '#D4813A','line-width': 3}}
       />
     </Source>
     <Source id="live-source" type="geojson" data={geojson}>
       <Layer id="live" type="line"
-        filter={['==', ['get', 'type'], 'live']}
+        filter={['==', ['get', 'routeType'], 'live']}
         paint={{ 'line-color': '#3A8D60','line-width': 3}}
+      />
+      <Layer id="live-points" type="circle"
+        filter={['==', ['geometry-type'], 'Point']}
+        paint={{ 'circle-radius': 4, 'circle-color': '#3A8D60'}}
       />
     </Source>
     {showPopup.show && (
@@ -103,7 +109,7 @@ export default function LiveMap({geojson, auth}) {
           lastPoint.properties.mode === 'hiking'
             ? mokus
             : car
-          } alt="plane" width={60} height={51}/>
+          } alt="plane" width={60*zoom/12} height={51*zoom/12}/>
       </Marker>
     )}
     </Map>
