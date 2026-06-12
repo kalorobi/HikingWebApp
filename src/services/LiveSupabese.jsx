@@ -9,11 +9,12 @@ export function useLiveCoordinates(user_id) {
   // LIVE POINT HANDLER
   // -------------------------
   const addPoint = useCallback((row) => {
+    if (row.lat == null || row.lng == null) return;
     const newPoint = {
       type: 'Feature',
       geometry: {
         type: 'Point',
-        coordinates: [row.lng, row.lat].filter(v => v !== null),
+        coordinates: [row.lng, row.lat],
       },
       properties: {
         created_at: row.created_at,

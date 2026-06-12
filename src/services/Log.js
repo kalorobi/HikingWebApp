@@ -22,5 +22,5 @@ export function Log(){
         language: navigator.language,
   };
 
-  console.log(JSON.stringify(payload))
+  console.log(JSON.stringify(payload)) 
 }
