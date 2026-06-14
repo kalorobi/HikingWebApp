@@ -13,10 +13,9 @@ export default function LiveMap({geojson, auth}) {
   const mapRef = useRef(null);
   const [showPopup, setShowPopup] = useState({
     "show": true, 
-    "txt": "Túra még nem",
+    "txt": "Túra még nem indult el!",
     "longitude": 19.826587,
-    "latitude": 47.9263058
-
+    "latitude": 47.9263058,
   });
   const [zoom, setZoom] = useState(0);
   const [is_center, setIs_center] = useState(true);
@@ -84,8 +83,26 @@ export default function LiveMap({geojson, auth}) {
         paint={{ 'line-color': '#3A8D60','line-width': 3}}
       />
       <Layer id="live-points" type="circle"
+        minzoom={13}
         filter={['==', ['geometry-type'], 'Point']}
         paint={{ 'circle-radius': 4, 'circle-color': '#3A8D60'}}
+      />
+      <Layer
+        id="live-labels"
+        type="symbol"
+        minzoom={13}
+        filter={['==', ['geometry-type'], 'Point']}
+        layout={{
+          'text-field': ['get', 'timeLabel'],
+          'text-size': 10,
+          'text-anchor': 'bottom',
+          'text-offset': [0, -0.8],
+        }}
+        paint={{
+          'text-color': '#4A2E1F',
+          'text-halo-color': '#fff',
+          'text-halo-width': 1,
+        }}
       />
     </Source>
     {showPopup.show && (
@@ -95,9 +112,9 @@ export default function LiveMap({geojson, auth}) {
         anchor="bottom"
         onClose={() => setShowPopup(prev => ({...prev, show: false}))}
       >
-        <div>
-          {showPopup.txt}
-        </div>
+       <div>
+        {showPopup.txt}
+      </div>
       </Popup>
     )}
     {lastPoint && (
