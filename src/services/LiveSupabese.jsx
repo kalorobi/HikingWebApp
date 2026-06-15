@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { supabase } from './SupabaseClient';
 
 export function useLiveCoordinates(user_id) {
-  const [plannedRoute, setPlannedRoute] = useState(null);
+  const [plannedRoutes, setPlannedRoutes] = useState([]);
   const [livePoints, setLivePoints] = useState([]);
 
   // -------------------------
@@ -10,6 +10,8 @@ export function useLiveCoordinates(user_id) {
   // -------------------------
   const addPoint = useCallback((row) => {
     if (row.lat == null || row.lng == null) return;
+    const timeLabel = new Date(row.created_at).toLocaleTimeString('hu-HU', {
+      hour: '2-digit', minute: '2-digit',})
     const newPoint = {
       type: 'Feature',
       geometry: {
@@ -18,6 +20,7 @@ export function useLiveCoordinates(user_id) {
       },
       properties: {
         created_at: row.created_at,
+        timeLabel: timeLabel,
         mode: row.mode ?? 'car',
         gsm: row.gsm ?? null,
         battery: row.battery ?? null,
@@ -29,7 +32,7 @@ export function useLiveCoordinates(user_id) {
   }, []);
 
   // -------------------------
-  // PLANNED ROUTE FETCH
+  // PLANNED ROUTES FETCH
   // -------------------------
   useEffect(() => {
     if (user_id == null || user_id < 0) return;
@@ -41,15 +44,15 @@ export function useLiveCoordinates(user_id) {
         .eq('user_id', user_id)
         .eq('is_active', true)
         .eq('is_ready', true)
-        .order('created_at', { ascending: false })
-        .limit(1);
+        .order('created_at', { ascending: false });
+        // .limit(1) eltávolítva — minden aktív útvonalat lekérünk
 
       if (error) {
         console.error(error);
         return;
       }
 
-      setPlannedRoute(data?.[0] ?? null);
+      setPlannedRoutes(data ?? []);
     };
 
     fetchPlanned();
@@ -114,55 +117,57 @@ export function useLiveCoordinates(user_id) {
   // GEOJSON BUILD
   // -------------------------
   const geojson = useMemo(() => {
-  const plannedCoords =
-    plannedRoute?.geojson?.features?.[0]?.geometry?.coordinates ?? null;
+    const hikingPoints = livePoints.filter(
+      p => p.properties?.mode === 'hiking'
+    );
 
-  const hikingPoints = livePoints.filter(
-    p => p.properties?.mode === 'hiking'
-  );
+    const liveLineCoords =
+      hikingPoints.length >= 2
+        ? hikingPoints.map(p => p.geometry.coordinates)
+        : null;
 
-  const liveLineCoords =
-    hikingPoints.length >= 2
-      ? hikingPoints.map(p => p.geometry.coordinates)
-      : null;
+    // Minden planned route-ból Feature-t csinálunk
+    const plannedFeatures = plannedRoutes.flatMap(route => {
+      const coords = route.geojson?.features?.[0]?.geometry?.coordinates ?? null;
+      if (!coords) return [];
+      return [{
+        type: 'Feature',
+        geometry: {
+          type: 'LineString',
+          coordinates: coords,
+        },
+        properties: {
+          routeType: 'planned',
+          plan_name: route.plan_name,
+          mountain: route.mountain,
+          description: route.description,
+          link: route.link,
+        },
+      }];
+    });
 
-  return {
-    type: 'FeatureCollection',
-    features: [
-      ...(plannedCoords
-        ? [{
-            type: 'Feature',
-            geometry: {
-              type: 'LineString',
-              coordinates: plannedCoords,
-            },
-            properties: {
-              routeType: 'planned',
-              plan_name: plannedRoute?.plan_name,
-              mountain: plannedRoute?.mountain,
-              description: plannedRoute?.description,
-              link: plannedRoute?.link,
-            },
-          }]
-        : []),
+    return {
+      type: 'FeatureCollection',
+      features: [
+        ...plannedFeatures,
 
-      ...(liveLineCoords
-        ? [{
-            type: 'Feature',
-            geometry: {
-              type: 'LineString',
-              coordinates: liveLineCoords,
-            },
-            properties: {
-              routeType: 'live',
-            },
-          }]
-        : []),
+        ...(liveLineCoords
+          ? [{
+              type: 'Feature',
+              geometry: {
+                type: 'LineString',
+                coordinates: liveLineCoords,
+              },
+              properties: {
+                routeType: 'live',
+              },
+            }]
+          : []),
 
-      ...livePoints,
-    ],
-  };
-}, [plannedRoute, livePoints]);
+        ...livePoints,
+      ],
+    };
+  }, [plannedRoutes, livePoints]);
 
   return { geojson };
 }

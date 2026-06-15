@@ -16,7 +16,7 @@ export default function Login({auth, setAuth}) {
       case "ERROR":
         return {...state, error: action.payload.error};
       case "SUCCESS":
-        return {...state, user_id: action.payload.user_id, user: action.payload.user, is_ok: true};
+        return {...state, user_id: action.payload.user_id, user: action.payload.user, key: action.payload.key, is_ok: true};
 
       default: return state;
     }
@@ -35,7 +35,7 @@ export default function Login({auth, setAuth}) {
       const live_user = await checkUser(user);
 
       if (live_user?.id && key === liveKey) {
-        dispatchAuth({type: "SUCCESS",payload: { user_id: live_user.id, user: user }});
+        dispatchAuth({type: "SUCCESS",payload: { user_id: live_user.id, user: user, key: key }});
       } else {
         dispatchAuth({type: "ERROR",payload: { error: "Téves user vagy jelszó" }});
       }
@@ -49,7 +49,7 @@ export default function Login({auth, setAuth}) {
   useEffect(() => {
     if(authLogin.is_ok){
       setAuth({user_id: authLogin.user_id, user: authLogin.user, is_ok: true});
-      navigate(`/live/${authLogin.user}`, { replace: true });
+      navigate(`/live/${authLogin.user}?key=${authLogin.key}`, { replace: true });
     }
   },[authLogin.is_ok])
 
