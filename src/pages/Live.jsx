@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import LiveMap from '../components/map/LiveMap';
 import Login from '../components/login/Login'
-import { useLiveCoordinates } from '../services/LiveSupabese';
+import { useLiveCoordinates } from '../services/LiveSupabase_2';
 
 import testgeojson from '../components/map/testgeo.json'
 
@@ -17,15 +17,18 @@ export default function Live(){
         user_id: -1,
         is_ok: false
     });
-    const { geojson } = useLiveCoordinates(auth.user_id);
+    
+    const { geojson, refetchMissingPoints, isRefetching } = useLiveCoordinates(auth.user_id);
 
-    useEffect(() => {
-        console.log(geojson)
-    },[geojson])
+    function getSessionAuth(){
+        let session_auth = sessionStorage.getItem("session_auth");
+        if(!session_auth) { return false }
+        else { return true }
+    }
 
     return (
         <div style={{ width: '100%', height: '100vh' }}>
-            <LiveMap geojson={geojson} auth={auth}/>
+            <LiveMap geojson={geojson} refress={refetchMissingPoints} auth={auth}/>
             {!auth.is_ok && (<Login auth={auth} setAuth={setAuth} />)}
         </div>
     )
