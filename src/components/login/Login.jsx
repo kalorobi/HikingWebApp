@@ -49,7 +49,14 @@ export default function Login({auth, setAuth}) {
   useEffect(() => {
     if(authLogin.is_ok){
       setAuth({user_id: authLogin.user_id, user: authLogin.user, is_ok: true});
-      navigate(`/live/${authLogin.user}?key=${authLogin.key}`, { replace: true });
+      
+      let session_auth = sessionStorage.getItem("session_auth");
+      if(!session_auth){
+        session_auth = true;
+        sessionStorage.setItem("session_auth", session_auth);
+      }
+
+      navigate(`/live/${authLogin.user}?key=${encodeURIComponent(authLogin.key)}`, { replace: true });
     }
   },[authLogin.is_ok])
 

@@ -5,9 +5,9 @@ import './LiveMap.css';
 import mapStyles from './LiveMapStyles.json';
 import mokus from '../../assets/ikons/mokus.svg';
 import car from '../../assets/ikons/car.svg'
-import { LocateFixed, Locate, MapLayer } from '../../assets/ikons/MapIcons';
+import { LocateFixed, Locate, MapLayer, Refress } from '../../assets/ikons/MapIcons';
 
-export default function LiveMap({geojson, auth}) {
+export default function LiveMap({geojson, refress, auth}) {
   
   const [lastPoint, setLastPoint] = useState(null);
   const mapRef = useRef(null);
@@ -64,7 +64,10 @@ export default function LiveMap({geojson, auth}) {
       reuseMaps
       ref={mapRef}
       dragRotate={false}
-      touchZoomRotate={false}
+      onLoad={() => {
+        const map = mapRef.current?.getMap();
+        map?.touchZoomRotate.disableRotation();
+      }}
       onMoveEnd={(e) => {if (e.originalEvent) {setIs_center(false);}}}
       onZoom={(e) => {setZoom(e.viewState.zoom);}}
       initialViewState={{ ...mapStyles.mapCenter }}
@@ -75,6 +78,12 @@ export default function LiveMap({geojson, auth}) {
       <Layer id="planned" type="line"
         filter={['==', ['get', 'routeType'], 'planned']}
         paint={{ 'line-color': '#D4813A','line-width': 3}}
+      />
+    </Source>
+     <Source id="live-flat" type="geojson" data={geojson}>
+      <Layer id="flat" type="line"
+        filter={['==', ['get', 'routeType'], 'live-flat']}
+        paint={{ 'line-color': '#5B8FA8','line-width': 3}}
       />
     </Source>
     <Source id="live-source" type="geojson" data={geojson}>
@@ -142,7 +151,10 @@ export default function LiveMap({geojson, auth}) {
         }}>
           <MapLayer />
         </button>
-        <div style={{fontSize: 10, align: 'center', padding: 2, color: '#6f4e37', backgroundColor: '#ffffff'}}>{zoom.toFixed(1)}</div>
+        <button style={{ padding: 0, lineHeight: 0 }} onClick={refress}>
+          <Refress />
+        </button>
+        <div style={{fontSize: 10, textAlign: 'center', padding: 2, color: '#6f4e37', backgroundColor: '#ffffff'}}>{zoom.toFixed(1)}</div>
     </div>
     </div>
   );
