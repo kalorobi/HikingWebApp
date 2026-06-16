@@ -52,8 +52,13 @@ export default function Login({auth, setAuth}) {
       
       let session_auth = sessionStorage.getItem("session_auth");
       if(!session_auth){
-        session_auth = true;
-        sessionStorage.setItem("session_auth", session_auth);
+        session_auth = {
+          user_id: authLogin.user_id,
+          user: authLogin.user,
+          key: authLogin.key,
+          is_ok: true
+        };
+        sessionStorage.setItem("session_auth", JSON.stringify(session_auth));
       }
 
       navigate(`/live/${authLogin.user}?key=${encodeURIComponent(authLogin.key)}`, { replace: true });
