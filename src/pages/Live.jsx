@@ -20,11 +20,14 @@ export default function Live(){
     
     const { geojson, refetchMissingPoints, isRefetching } = useLiveCoordinates(auth.user_id);
 
-    function getSessionAuth(){
-        let session_auth = sessionStorage.getItem("session_auth");
-        if(!session_auth) { return false }
-        else { return true }
-    }
+    useEffect(() => {
+        const stored = sessionStorage.getItem("session_auth");
+
+        if (stored) {
+            setAuth(JSON.parse(stored));
+            console.log("SET AUTH")
+        }
+    }, []);
 
     return (
         <div style={{ width: '100%', height: '100vh' }}>
