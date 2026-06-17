@@ -1,4 +1,4 @@
-//FULL CLAUDE AI
+//FULL CLAUDE AI - pici szogelessel :)
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { supabase } from './SupabaseClient';
 
@@ -8,19 +8,22 @@ const ORS_STEP = 5; // minden ORS_STEP-edik pont lesz waypoint
 
 async function fetchOrsRoute(coords) {
   const res = await fetch(
-    `https://api.openrouteservice.org/v2/directions/${ORS_PROFILE}/geojson`,
+    `https://api.heigit.org/openrouteservice/v2/directions/${ORS_PROFILE}/geojson`,
+    /*`https://api.openrouteservice.org/v2/directions/${ORS_PROFILE}/geojson`,*/
     {
       method: 'POST',
       headers: {
         'Authorization': ORS_API_KEY,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ coordinates: coords }),
+      body: JSON.stringify({ coordinates: coords, elevation: true }),
     }
   );
   if (!res.ok) throw new Error(`ORS error: ${res.status}`);
   const data = await res.json();
-  return data.features?.[0]?.geometry?.coordinates ?? null;
+
+  //return data.features?.[0]?.geometry?.coordinates ?? null;
+  return data ?? null
 }
 
 export function useLiveCoordinates(user_id) {
@@ -30,6 +33,7 @@ export function useLiveCoordinates(user_id) {
   const [isRefetching, setIsRefetching] = useState(false);
 
   const orsCache = useRef({});
+  const orsMeta = useRef({});
   // Már ismert created_at értékek, gyors duplikáció-szűréshez
   const knownTimestamps = useRef(new Set());
 
@@ -206,13 +210,16 @@ export function useLiveCoordinates(user_id) {
     let cancelled = false;
 
     const buildFlatLine = async () => {
+      let orsSnapped;
       let snapped;
 
       if (orsCache.current[cacheKey]) {
         snapped = orsCache.current[cacheKey];
       } else {
         try {
-          snapped = await fetchOrsRoute(waypoints);
+          orsSnapped = await fetchOrsRoute(waypoints);
+          snapped = orsSnapped.features[0]?.geometry.coordinates;
+          orsMeta.current = orsSnapped.features[0]?.properties;
           if (cancelled) return;
           if (!snapped?.length) throw new Error('Empty ORS response');
           orsCache.current[cacheKey] = snapped;
@@ -280,7 +287,11 @@ export function useLiveCoordinates(user_id) {
           ? [{
               type: 'Feature',
               geometry: { type: 'LineString', coordinates: flatCoords },
-              properties: { routeType: 'live-flat' },
+              properties: { 
+                ...orsMeta.current,
+                routeType: 'live-flat'
+
+              },
             }]
           : []),
 
