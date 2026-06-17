@@ -59,7 +59,7 @@ export default function LiveMap({geojson, refress, auth}) {
   }
 
   return (
-    <div style={{ position: 'relative', width: '100vw', height: '100vh' }}>
+    <div style={{ position: 'relative', width: '100%', height: '100%' }}>
     <Map
       reuseMaps
       ref={mapRef}
@@ -83,13 +83,13 @@ export default function LiveMap({geojson, refress, auth}) {
      <Source id="live-flat" type="geojson" data={geojson}>
       <Layer id="flat" type="line"
         filter={['==', ['get', 'routeType'], 'live-flat']}
-        paint={{ 'line-color': '#5B8FA8','line-width': 3}}
+        paint={{ 'line-color': '#5B8FA8','line-width': 5}}
       />
     </Source>
     <Source id="live-source" type="geojson" data={geojson}>
       <Layer id="live" type="line"
         filter={['==', ['get', 'routeType'], 'live']}
-        paint={{ 'line-color': '#3A8D60','line-width': 3}}
+        paint={{ 'line-color': '#3A8D60','line-width': 3, 'line-opacity': 0.2}}
       />
       <Layer id="live-points" type="circle"
         minzoom={13}
@@ -103,7 +103,10 @@ export default function LiveMap({geojson, refress, auth}) {
         filter={['==', ['geometry-type'], 'Point']}
         layout={{
           'text-field': ['get', 'timeLabel'],
-          'text-size': 10,
+          'text-size': {
+            base: 1,
+            stops: [[13, 10],[16, 10],[20, 22]]
+          },
           'text-anchor': 'bottom',
           'text-offset': [0, -0.8],
         }}
