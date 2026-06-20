@@ -5,7 +5,7 @@ import './LiveMap.css';
 import mapStyles from './LiveMapStyles.json';
 import mokus from '../../assets/ikons/mokus.svg';
 import car from '../../assets/ikons/car.svg'
-import { LocateFixed, Locate, MapLayer, Refress } from '../../assets/ikons/MapIcons';
+import { Icon } from '../../assets/ikons/MapIcons';
 
 export default function LiveMap({geojson, refress, auth}) {
   
@@ -146,16 +146,16 @@ export default function LiveMap({geojson, refress, auth}) {
      <div style={{position: 'absolute', right: 16, top: 16, display: 'flex',flexDirection: 'column',
         gap: 8, zIndex: 10}}>
         <button style={{ padding: 0, lineHeight: 0 }} onClick={toCeneter}>
-          {is_center ? <LocateFixed /> : <Locate />}
+          <Icon name={is_center ? "locateFixed" : "locate"}/>
         </button>
         <button style={{ padding: 0, lineHeight: 0 }} onClick={() => {
           activeStyle.id === "openfreemap" ? 
             setActiveStyle(mapStyles.layers[1]) :  setActiveStyle(mapStyles.layers[0]);          
         }}>
-          <MapLayer />
+          <Icon name="maplayer" />
         </button>
         <button style={{ padding: 0, lineHeight: 0 }} onClick={refress}>
-          <Refress />
+          <Icon name="refress" />
         </button>
         <div style={{fontSize: 10, textAlign: 'center', padding: 2, color: '#6f4e37', backgroundColor: '#ffffff'}}>{zoom.toFixed(1)}</div>
     </div>
