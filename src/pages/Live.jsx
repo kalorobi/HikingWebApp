@@ -3,6 +3,7 @@ import { useParams, useSearchParams } from 'react-router-dom';
 import LiveMap from '../components/map/LiveMap';
 import Login from '../components/login/Login'
 import { useLiveCoordinates } from '../services/LiveSupabase_2';
+import { Icon } from '../assets/ikons/MapIcons';
 
 export default function Live(){
 
@@ -54,8 +55,16 @@ export default function Live(){
             <div style={{flex: '1'}}>
                 <LiveMap geojson={geojson} refress={refetchMissingPoints} auth={auth}/>
             </div>
-            <div className='footer'>
-                <div>távolság: <b>{(meta.distance/1000).toFixed(2)}</b> km szint: {meta.up} m</div>
+
+            <div className="footer" style={{ display: 'flex', alignItems: 'center', gap: '16px', height: '25px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                     <Icon name="measure" color="#F2E7D5" scale={0.5} />
+                    <span>{(meta.distance / 1000).toFixed(2)} km</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <Icon name="mountain" color="#F2E7D5" scale={0.5} />
+                    <span>{meta.up} m</span>
+                </div>
             </div>
             {!auth.is_ok && (<Login auth={auth} setAuth={setAuth} />)}
         </div>
