@@ -1,0 +1,78 @@
+.live-dashboard {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-family: system-ui, -apple-system, sans-serif;
+    background: #f9fdf8;
+    border: 1px solid #7A9E6F;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 24px;
+}
+
+.live-dashboard__header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Pulzáló pötty -- D4813A (narancssárga) a palettából */
+.live-dashboard__dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #D4813A;
+    animation: pulse 1.5s ease-in-out infinite;
+    flex-shrink: 0;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1;   transform: scale(1);    }
+    50%       { opacity: 0.4; transform: scale(0.85); }
+}
+
+.live-dashboard__count {
+    font-size: 18px;
+    font-weight: 700;
+    color: #D4813A;
+    line-height: 1;
+}
+
+.live-dashboard__label {
+    font-size: 13px;
+    color: #7A9E6F;
+}
+
+/* Néző-lista */
+.live-dashboard__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.live-dashboard__item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 5px 0;
+    border-bottom: 1px solid #e8f3e5;
+    font-size: 13px;
+}
+
+.live-dashboard__item:last-child {
+    border-bottom: none;
+}
+
+.live-dashboard__path {
+    color: #4a7a3f;
+    font-weight: 500;
+}
+
+.live-dashboard__since {
+    color: #D4813A;
+    white-space: nowrap;
+    font-size: 12px;
+}
