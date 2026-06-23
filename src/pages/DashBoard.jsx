@@ -10,7 +10,6 @@ import {
 } from "recharts";
 import { supabase } from '../services/SupabaseClient';
 import "./DashBoard.css";
-import LiveDashboard from "./LiveDashBoard";
 
 function formatDateLabel(isoDate) {
   const d = new Date(isoDate);
@@ -120,9 +119,6 @@ export default function DashBoard() {
 
   return (
     <div className="visitors-dashboard">
-
-      {/* Élő nézők -- a lap tetején */}
-      <LiveDashboard />
 
       <div className="visitors-dashboard__header">
         <h2>Látogatottság</h2>
