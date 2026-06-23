@@ -59,7 +59,8 @@
   text-transform: uppercase;
   letter-spacing: 0.03em;
   color: var(--color-moss);
-  padding: 0 0 8px;
+  background-color: var(--color-base);
+  padding: 2px 12px 8px;
   border-bottom: 1px solid var(--color-text)
 }
  

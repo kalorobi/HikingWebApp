@@ -28,7 +28,6 @@ export function visitorTrack(event="pageview"){
 export default function VisitorsLog() {
     const location = useLocation();
     const called = useRef(false);
-    const count = useRef(0);
 
     let visitorId = localStorage.getItem("visitor_id");
     if (!visitorId) {
@@ -44,8 +43,6 @@ export default function VisitorsLog() {
     useEffect(() => {
         if (called.current) return;
         called.current = true;
-
-count.current++;
 
         async function callFunction() {
         const { data, error } = await supabase.functions.invoke(
@@ -64,6 +61,6 @@ count.current++;
         if (error) {console.log(error);return;}
     }
     callFunction();
-console.log(count.current)
+
 },[location.pathname])
 }
