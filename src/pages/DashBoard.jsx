@@ -48,13 +48,16 @@ function StatsTable({ headers, rows, emptyText }) {
 
 export default function DashBoard() {
   const [days, setDays] = useState(7);
-  const [stats, setStats] = useState([]);
-  const [statsDevice, setStatsDevice] = useState([]);
-  const [statsCity, setStatsCity] = useState([]);
-  const [dailyData, setDailyData] = useState([]);
-  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [data, setData] = useState({
+    stats: [],
+    statsDevice: [],
+    statsCity: [],
+    statsCountry: [],
+    dailyData: [],
+    total: 0,
+  });
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -64,9 +67,9 @@ export default function DashBoard() {
       rangeStart.setDate(rangeStart.getDate() - (days - 1));
       rangeStart.setHours(0, 0, 0, 0);
 
-      const { data, error } = await supabase
+      const { data: rows, error } = await supabase
         .from("matra_visitors")
-        .select("path, created_at, device_type, city")
+        .select("path, created_at, device_type, country, city")
         .gte("created_at", rangeStart.toISOString());
 
       if (error) {
@@ -75,40 +78,37 @@ export default function DashBoard() {
         return;
       }
 
-      // Segédfüggvény: egy mező alapján összeszámol és csökkenő sorrendbe rendez
       const countBy = (field) => {
         const counts = {};
-        data.forEach((row) => {
+        rows.forEach((row) => {
           const key = row[field] ?? "ismeretlen";
           counts[key] = (counts[key] || 0) + 1;
         });
-        return Object.entries(counts)
-          .map(([key, count]) => [key, count])
-          .sort((a, b) => b[1] - a[1]);
+        return Object.entries(counts).sort((a, b) => b[1] - a[1]);
       };
 
-      // Napi összesítés a diagramhoz, hiányzó napok 0-val feltöltve
       const dayCounts = {};
       for (let i = days - 1; i >= 0; i--) {
         const d = new Date();
         d.setDate(d.getDate() - i);
         dayCounts[d.toISOString().slice(0, 10)] = 0;
       }
-      data.forEach(({ created_at }) => {
+      rows.forEach(({ created_at }) => {
         const key = created_at.slice(0, 10);
         if (key in dayCounts) dayCounts[key] += 1;
       });
 
-      setStats(countBy("path"));
-      setStatsDevice(countBy("device_type"));
-      setStatsCity(countBy("city"));
-      setDailyData(
-        Object.entries(dayCounts).map(([date, count]) => ({
+      setData({
+        stats: countBy("path"),
+        statsDevice: countBy("device_type"),
+        statsCity: countBy("city"),
+        statsCountry: countBy("country"),
+        dailyData: Object.entries(dayCounts).map(([date, count]) => ({
           date: formatDateLabel(date),
           count,
-        }))
-      );
-      setTotal(data.length);
+        })),
+        total: rows.length,
+      });
       setLoading(false);
     };
 
@@ -119,7 +119,6 @@ export default function DashBoard() {
 
   return (
     <div className="visitors-dashboard">
-
       <div className="visitors-dashboard__header">
         <h2>Látogatottság</h2>
         <select
@@ -133,7 +132,7 @@ export default function DashBoard() {
       </div>
 
       <div className="visitors-dashboard__total">
-        <span className="visitors-dashboard__total-number">{total}</span>
+        <span className="visitors-dashboard__total-number">{data.total}</span>
         <span className="visitors-dashboard__total-label">összes látogatás</span>
       </div>
 
@@ -145,7 +144,7 @@ export default function DashBoard() {
         <>
           <div className="visitors-dashboard__chart">
             <ResponsiveContainer width="100%" height={160}>
-              <BarChart data={dailyData} margin={{ top: 12, right: 0, left: -24, bottom: 0 }}>
+              <BarChart data={data.dailyData} margin={{ top: 12, right: 0, left: -24, bottom: 0 }}>
                 <XAxis
                   dataKey="date"
                   tick={{ fontSize: 12, fill: "#7A9E6F" }}
@@ -177,21 +176,10 @@ export default function DashBoard() {
             </ResponsiveContainer>
           </div>
 
-          <StatsTable
-            headers={["Oldal", "Darabszám"]}
-            rows={stats}
-            emptyText={emptyText}
-          />
-          <StatsTable
-            headers={["Eszköz", "Darabszám"]}
-            rows={statsDevice}
-            emptyText={emptyText}
-          />
-          <StatsTable
-            headers={["Város", "Darabszám"]}
-            rows={statsCity}
-            emptyText={emptyText}
-          />
+          <StatsTable headers={["Oldal", "Darabszám"]} rows={data.stats} emptyText={emptyText} /><br/>
+          <StatsTable headers={["Eszköz", "Darabszám"]} rows={data.statsDevice} emptyText={emptyText} /><br/>
+          <StatsTable headers={["Ország", "Darabszám"]} rows={data.statsCountry} emptyText={emptyText} /><br/>
+          <StatsTable headers={["Város", "Darabszám"]} rows={data.statsCity} emptyText={emptyText} />
         </>
       )}
     </div>
