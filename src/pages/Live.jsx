@@ -2,8 +2,10 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import LiveMap from '../components/map/LiveMap';
 import Login from '../components/login/Login'
-import { useLiveCoordinates } from '../services/LiveSupabase_2';
+import { useLiveCoordinates } from '../services/LiveSupabase';
 import { Icon } from '../assets/ikons/MapIcons';
+import LiveFooter from '../components/live/LiveFooter'
+import './Live.css';
 
 export default function Live(){
 
@@ -29,42 +31,14 @@ export default function Live(){
         }
     }, []);
 
-    useEffect(() => {
-        setMeta(prev => ({...prev,
-            distance: geojson.features[2]?.properties?.summary?.distance ?? 0,
-            up: calcUp(geojson.features[2]?.geometry?.coordinates),
-        }))
-    }, [geojson])
-
-    function calcUp(coordinates){
-        if(!coordinates) return 0;
-        let up = 0;
-
-        coordinates.forEach((coord, i, coords) => {
-            if(i !== 0) {
-                if(coords[i][2] > coords[i-1][2]){
-                    up += coords[i][2] - coords[i-1][2];
-                }
-            }
-        })
-        return up;
-    }
-
     return (
         <div style={{ width: '100%', height: '100dvh', display: 'flex', flexDirection: 'column' }}>
             <div style={{flex: '1'}}>
                 <LiveMap geojson={geojson} refress={refetchMissingPoints} auth={auth}/>
             </div>
 
-            <div className="footer" style={{ display: 'flex', alignItems: 'center', gap: '16px', height: '25px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                     <Icon name="measure" color="#F2E7D5" scale={0.5} />
-                    <span>{(meta.distance / 1000).toFixed(2)} km</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <Icon name="mountain" color="#F2E7D5" scale={0.5} />
-                    <span>{meta.up} m</span>
-                </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', height: '32px' }}>
+                <LiveFooter />
             </div>
             {!auth.is_ok && (<Login auth={auth} setAuth={setAuth} />)}
         </div>

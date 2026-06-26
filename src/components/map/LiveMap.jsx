@@ -6,6 +6,7 @@ import mapStyles from './LiveMapStyles.json';
 import mokus from '../../assets/ikons/mokus.svg';
 import car from '../../assets/ikons/car.svg'
 import { Icon } from '../../assets/ikons/MapIcons';
+import LiveView from '../live/LiveView';
 
 export default function LiveMap({geojson, refress, auth}) {
   
@@ -142,7 +143,6 @@ export default function LiveMap({geojson, refress, auth}) {
       </Marker>
     )}
     </Map>
-
      <div style={{position: 'absolute', right: 16, top: 16, display: 'flex',flexDirection: 'column',
         gap: 8, zIndex: 10}}>
         <button style={{ padding: 0, lineHeight: 0 }} onClick={toCeneter}>
