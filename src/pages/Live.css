@@ -8,25 +8,7 @@
   display: flex;
   align-items: center;
   gap: 16px;
-  height: 25px;          /* fix magasság, nem nő */
+  height: 80px;          /* fix magasság, nem nő */
   overflow: hidden;       /* ha bármi túlcsordulna, levágja, nem nyújtja szét */
   box-sizing: border-box;
-}
-
-.stat {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  height: 100%;           /* kitölti a szülő 25px-jét, nem többet */
-}
-
-.stat svg {
-  flex-shrink: 0;          /* az ikon ne zsugorodjon, de ne is nőjön túl */
-  width: 16px !important;  /* felülírja, ha bármi más próbálná átméretezni */
-  height: 16px !important;
-}
-
-.stat span {
-  line-height: 1;          /* a szöveg sorhossza ne pumpálja fel a magasságot */
-  white-space: nowrap;     /* a szöveg ne törjön új sorba, ami megnövelné a magasságot */
 }

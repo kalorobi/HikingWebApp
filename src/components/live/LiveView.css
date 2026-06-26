@@ -1,0 +1,9 @@
+.viewStat {
+    display: flex;
+    flex-direction: column; 
+    gap: 4px;
+    background: var(--color-moss) !important;
+    color: var(--color-dark) !important;
+    border-radius: 8;
+    font-size: var(--text-l) !important;
+}

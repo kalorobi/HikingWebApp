@@ -18,7 +18,6 @@ function formatDateLabel(isoDate) {
   return `${month}.${day}.`;
 }
 
-// Újrafelhasználható táblázat -- a három ismétlődő tábla helyett
 function StatsTable({ headers, rows, emptyText }) {
   return (
     <table className="visitors-dashboard__table">
@@ -64,8 +63,12 @@ export default function DashBoard() {
       setLoading(true);
 
       const rangeStart = new Date();
-      rangeStart.setDate(rangeStart.getDate() - (days - 1));
-      rangeStart.setHours(0, 0, 0, 0);
+      if (days === 1) {
+        rangeStart.setHours(0, 0, 0, 0);
+      } else {
+        rangeStart.setDate(rangeStart.getDate() - (days - 1));
+        rangeStart.setHours(0, 0, 0, 0);
+      }
 
       const { data: rows, error } = await supabase
         .from("matra_visitors")
@@ -87,26 +90,46 @@ export default function DashBoard() {
         return Object.entries(counts).sort((a, b) => b[1] - a[1]);
       };
 
-      const dayCounts = {};
-      for (let i = days - 1; i >= 0; i--) {
-        const d = new Date();
-        d.setDate(d.getDate() - i);
-        dayCounts[d.toISOString().slice(0, 10)] = 0;
+      let chartData;
+
+      if (days === 1) {
+        // Órás bontás: 0–23
+        const hourCounts = {};
+        for (let h = 0; h < 24; h++) {
+          hourCounts[h] = 0;
+        }
+        rows.forEach(({ created_at }) => {
+          const hour = new Date(created_at).getHours();
+          hourCounts[hour] += 1;
+        });
+        chartData = Object.entries(hourCounts).map(([hour, count]) => ({
+          date: `${String(hour).padStart(2, "0")}:00`,
+          count,
+        }));
+      } else {
+        // Napi bontás
+        const dayCounts = {};
+        for (let i = days - 1; i >= 0; i--) {
+          const d = new Date();
+          d.setDate(d.getDate() - i);
+          dayCounts[d.toISOString().slice(0, 10)] = 0;
+        }
+        rows.forEach(({ created_at }) => {
+          const key = created_at.slice(0, 10);
+          if (key in dayCounts) dayCounts[key] += 1;
+        });
+        chartData = Object.entries(dayCounts).map(([date, count]) => ({
+          date: formatDateLabel(date),
+          count,
+        }));
       }
-      rows.forEach(({ created_at }) => {
-        const key = created_at.slice(0, 10);
-        if (key in dayCounts) dayCounts[key] += 1;
-      });
 
       setData({
         stats: countBy("path"),
         statsDevice: countBy("device_type"),
         statsCity: countBy("city"),
         statsCountry: countBy("country"),
-        dailyData: Object.entries(dayCounts).map(([date, count]) => ({
-          date: formatDateLabel(date),
-          count,
-        })),
+        dailyData: chartData,
         total: rows.length,
       });
       setLoading(false);
@@ -115,7 +138,9 @@ export default function DashBoard() {
     fetchStats();
   }, [days]);
 
-  const emptyText = `Nincs adat az elmúlt ${days} napból.`;
+  const emptyText = days === 1
+    ? "Nincs adat a mai napból."
+    : `Nincs adat az elmúlt ${days} napból.`;
 
   return (
     <div className="visitors-dashboard">
@@ -126,6 +151,7 @@ export default function DashBoard() {
           value={days}
           onChange={(e) => setDays(Number(e.target.value))}
         >
+          <option value={1}>ma (órás)</option>
           <option value={7}>utolsó 7 nap</option>
           <option value={30}>utolsó 30 nap</option>
         </select>
@@ -144,12 +170,16 @@ export default function DashBoard() {
         <>
           <div className="visitors-dashboard__chart">
             <ResponsiveContainer width="100%" height={160}>
-              <BarChart data={data.dailyData} margin={{ top: 12, right: 0, left: -24, bottom: 0 }}>
+              <BarChart
+                data={data.dailyData}
+                margin={{ top: 12, right: 0, left: -24, bottom: 0 }}
+              >
                 <XAxis
                   dataKey="date"
-                  tick={{ fontSize: 12, fill: "#7A9E6F" }}
+                  tick={{ fontSize: days === 1 ? 10 : 12, fill: "#7A9E6F" }}
                   axisLine={false}
                   tickLine={false}
+                  interval={days === 1 ? 1 : days === 30 ? 2:0}
                 />
                 <YAxis
                   allowDecimals={false}
