@@ -9,7 +9,7 @@ import DashBoard from './pages/DashBoard';
 function App() {
   return (
     <Router>
-      <VisitorsLog />
+      {import.meta.env.PROD && <VisitorsLog />}
       <Routes>
         <Route path="/live" element={<Live />} />
         <Route path="/live/:user" element={<Live />} />
