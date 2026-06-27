@@ -35,7 +35,7 @@ export default function Live(){
                 <LiveMap geojson={geojson} refress={refetchMissingPoints} auth={auth}/>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', height: '32px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', height: '28px' }}>
                 <LiveFooter />
             </div>
             {!auth.is_ok && (<Login auth={auth} setAuth={setAuth} />)}

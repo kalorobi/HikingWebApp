@@ -23,15 +23,15 @@ export default function LiveFooter(){
     return (
         <>
         <div className='stat'>
-            <Icon name="measure" color="#F2E7D5" />
+            <Icon name="measure" color="#F2E7D5" scale={0.8}/>
             <span> km</span>
         </div>
         <div className='stat'>
-            <Icon name="mountain" color="#F2E7D5" />
+            <Icon name="mountain" color="#F2E7D5" scale={0.8}/>
             <span> m</span>
         </div>
         <div className='stat'>
-            <Icon name="eye" color="#F2E7D5" />
+            <Icon name="eye" color="#F2E7D5" scale={0.8}/>
             <span> <LiveView /> </span>
         </div>
         </>
