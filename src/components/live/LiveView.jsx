@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Tooltip } from 'react-tooltip';
 import { supabase } from "../../services/SupabaseClient";
 import { getVisitorId } from "../../services/Storage";
@@ -7,6 +7,7 @@ import "./LiveView.css"
 export default function LiveView() {
   const [viewers, setViewers] = useState([]);
   const [now, setNow] = useState(Date.now());
+  const me = useRef(0)
 
   // UI timer (csak kliens oldali render frissítés)
   useEffect(() => {
@@ -19,6 +20,7 @@ export default function LiveView() {
 
   useEffect(() => {
     const viewerId = getVisitorId();
+    me.current = viewerId;
 
     const channel = supabase.channel("page-viewers");
 
@@ -68,14 +70,13 @@ export default function LiveView() {
     <Tooltip id="viewer-tooltip" className="viewStat">
       <div>
         {viewers.map((v) => (
-          <div key={v.viewerId}>
-            {v.viewerId.slice(0, 6)} —{" "}
-            {formatDuration(now - v.joinedAt)}
-          </div>
+        <div key={v.viewerId}>
+          {v.viewerId === me.current ? "Én->" : v.viewerId.slice(0, 6)} —{" "}
+          {formatDuration(now - v.joinedAt)}
+        </div>
         ))}
       </div>
     </Tooltip>
-
     </>
   );
 }
