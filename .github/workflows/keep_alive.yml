@@ -1,0 +1,17 @@
+name: Supabase Keep Alive
+
+on:
+  schedule:
+    # Minden nap hajnali 4:00-kor fut le
+    - cron: '0 4 * * *'
+  workflow_dispatch: # Lehetővé teszi a manuális indítást is teszteléshez
+
+jobs:
+  ping_supabase:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send a request to Supabase
+        run: |
+          curl -X GET "${{ secrets.SUPABASE_URL }}/rest/v1/auth/health" \
+          -H "apikey: ${{ secrets.SUPABASE_KEY }}" \
+          -H "Authorization: Bearer ${{ secrets.SUPABASE_KEY }}"
