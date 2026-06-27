@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
-import LiveMap from '../components/map/LiveMap';
+import LiveMap from '../components/live/LiveMap';
 import Login from '../components/login/Login'
 import { useLiveCoordinates } from '../services/LiveSupabase';
 import { Icon } from '../assets/ikons/MapIcons';
@@ -20,14 +20,12 @@ export default function Live(){
     });
     
     const { geojson, refetchMissingPoints, isRefetching } = useLiveCoordinates(auth.user_id);
-    const [meta, setMeta] = useState({distance: 0, up: 0})
 
     useEffect(() => {
         const stored = sessionStorage.getItem("session_auth");
 
         if (stored) {
             setAuth(JSON.parse(stored));
-            console.log("SET AUTH")
         }
     }, []);
 

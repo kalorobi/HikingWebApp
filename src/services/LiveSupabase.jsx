@@ -27,6 +27,7 @@ async function fetchOrsRoute(coords) {
 }
 
 export function useLiveCoordinates(user_id) {
+
   const [plannedRoutes, setPlannedRoutes] = useState([]); // több planned route
   const [livePoints, setLivePoints] = useState([]);
   const [flatCoords, setFlatCoords] = useState([]);

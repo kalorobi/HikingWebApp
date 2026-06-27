@@ -15,6 +15,10 @@ export function getSessionId(){
     return sessionId
 }
 
+export function setSession({key, value}){
+    sessionStorage.setItem(key, value);
+}
+
 export function generateUUID() {
     if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
         return crypto.randomUUID();

@@ -1,88 +1,83 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { useReducer } from "react";
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { checkUser } from '../../services/LoginSupabase';
+import { setSession } from '../../services/Storage';
 import './Login.css';
 
-export default function Login({auth, setAuth}) {
+export async function checkAuth(auth, setAuth, navigate){
+  const sessionAuth = sessionStorage.getItem("session_auth");
 
-  const initialAuth = {...auth, error: ""};
-  const navigate = useNavigate();
-  const [user, setUser] = useState(auth.user ?? '');
-  const [key, setKey] = useState(auth.key ?? '');
-  const [authLogin, dispatchAuth] = useReducer(authReducer, initialAuth);
-  function authReducer(state, action) {
-    switch (action.type) {
-      case "ERROR":
-        return {...state, error: action.payload.error};
-      case "SUCCESS":
-        return {...state, user_id: action.payload.user_id, user: action.payload.user, key: action.payload.key, is_ok: true};
-
-      default: return state;
-    }
+  if(sessionAuth){
+    setAuth(JSON.parse(sessionAuth));
+    return;
   }
 
- async function handleLogin (e) {
+   if (!auth.user?.trim()) {
+      return 'Add meg a felhasználónevet.';
+    }
+    if (!auth.key) {
+      return 'Add meg a jelszót.';
+    }
+  
+  
+  try {
+    const user_id = await checkUser(auth.user, auth.key);
+
+    if (!user_id) {
+        return 'Hibás felhasználónév vagy jelszó.';
+    }
+
+    const updatedAuth = { ...auth, user_id, is_ok: true };
+
+    setAuth(updatedAuth);
+    setSession({key: "session_auth", value: JSON.stringify(updatedAuth)});
+    navigate(`/live/${updatedAuth.user}?key=${encodeURIComponent(updatedAuth.key)}`, { replace: true });
+
+    } catch (err) { setError('Kapcsolati hiba. Próbáld újra.'); }
+
+}
+
+export default function Login({ auth, setAuth }) {
+  const navigate = useNavigate();
+  const [error, setError] = useState(null);
+
+  async function handleLogin(e) {
     e.preventDefault();
 
-    if(!user || !key) {
-      dispatchAuth({type: "ERROR",payload: { error: "Hiányzó adatok" }});
-      return;
-    }
-
-    try {
-      const liveKey = import.meta.env.VITE_LIVE_KEY;
-      const live_user = await checkUser(user);
-
-      if (live_user?.id && key === liveKey) {
-        dispatchAuth({type: "SUCCESS",payload: { user_id: live_user.id, user: user, key: key }});
-      } else {
-        dispatchAuth({type: "ERROR",payload: { error: "Téves user vagy jelszó" }});
-      }
-
-    } catch (err) {
-      console.log(err);
-      dispatchAuth({type: "ERROR",payload: { error: "Adatbázis hiba" }});
-    }
-  };
-
-  useEffect(() => {
-    if(authLogin.is_ok){
-      setAuth({user_id: authLogin.user_id, user: authLogin.user, is_ok: true});
-      
-      let session_auth = sessionStorage.getItem("session_auth");
-      if(!session_auth){
-        session_auth = {
-          user_id: authLogin.user_id,
-          user: authLogin.user,
-          key: authLogin.key,
-          is_ok: true
-        };
-        sessionStorage.setItem("session_auth", JSON.stringify(session_auth));
-      }
-
-      navigate(`/live/${authLogin.user}?key=${encodeURIComponent(authLogin.key)}`, { replace: true });
-    }
-  },[authLogin.is_ok])
+    const err = await checkAuth(auth, setAuth, navigate);
+    if(err) setError(err);
+  }
 
   return (
     <div className='overlay'>
       <form onSubmit={handleLogin} className='form'>
-        <h4>Login:</h4>
-        <input 
-          type="text" placeholder="Túrázó:" 
-          value={user} onChange={e => setUser(e.target.value)}
+        <h4>Bejelentkezés:</h4>
+
+        <input
+          type="text"
+          placeholder="Túrázó:"
+          value={auth.user ?? ''}
+          onChange={e => setAuth(prev => ({ ...prev, user: e.target.value }))}
           className='input'
         />
-        <input 
-          type="password" placeholder="Jelszó:" 
-          value={key} onChange={e => setKey(e.target.value)}
+        <input
+          type="password"
+          placeholder="Jelszó:"
+          value={auth.key ?? ''}
+          onChange={e => setAuth(prev => ({ ...prev, key: e.target.value }))}
           className='input'
         />
-        <br/>
-        {authLogin.error !== "" && <div className='error'>{authLogin.error}</div>}
-         <button type="submit" className='btn'>Belépés</button>
+
+        {error && (
+          <div className='error'>
+            {error}
+          </div>
+        )}
+
+        <button type="submit" className='btn'>
+          OK
+        </button>
       </form>
     </div>
-  )
+  );
 }
