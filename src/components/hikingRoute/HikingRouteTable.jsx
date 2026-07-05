@@ -1,7 +1,17 @@
+import { useEffect } from 'react';
 import './HikingRouteTable.css'
 
-export function HikingRouteTable({ features, onSetVisited, onSetVisitedDatas }) {
-  if(!features) return;
+export function HikingRouteTable({ selectedWays, setSelectedWaysView, onSetVisited, onSetVisitedDatas }) {
+  
+  useEffect(() => {
+    const filtered = selectedWays.features.filter(f => f.properties.visited === false);
+
+    setSelectedWaysView(filtered.length > 0 
+      ? { ...selectedWays, features: filtered } 
+      : null
+    );
+}, [selectedWays, setSelectedWaysView])
+
   return (
     <div>
       <table>
@@ -14,7 +24,7 @@ export function HikingRouteTable({ features, onSetVisited, onSetVisitedDatas }) 
           </tr>
         </thead>
         <tbody>
-          {features.map((f, i) => (
+          {selectedWays.features.map((f, i) => (
             <MapTableRow
               key={f.id}
               index={i}

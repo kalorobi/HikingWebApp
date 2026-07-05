@@ -1,14 +1,22 @@
 import { useEffect, useRef, useState } from 'react';
 import { Map, Source, Layer, useMap } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
+import bbox from '@turf/bbox';
 
-export default function HikingRouteMap({ geojson, selectedFeatures, onFeatureClick }) {
+export default function HikingRouteMap({ geojson, selectedWaysView, onFeatureClick }) {
   const mapRef = useRef(null);
   const [cursor, setCursor] = useState('auto');
 
-  function handleClick(featureId){
-    onFeatureClick(featureId);
-  }
+  useEffect(() => {
+    if (!selectedWaysView || !selectedWaysView.features?.length || !mapRef.current) return;
+
+    const [minLng, minLat, maxLng, maxLat] = bbox(selectedWaysView);
+
+    mapRef.current.fitBounds(
+      [[minLng, minLat],[maxLng, maxLat],],
+      {padding: 40, duration: 1000, maxZoom: 16,}
+    );
+  }, [selectedWaysView]);
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
@@ -21,8 +29,7 @@ export default function HikingRouteMap({ geojson, selectedFeatures, onFeatureCli
         onClick={(e) => {
             const featureId = e.features?.[0].id;
             if (!featureId) return;
-
-            handleClick(featureId);
+            onFeatureClick(featureId);
         }}
         onLoad={() => {
           mapRef.current?.getMap()?.touchZoomRotate.disableRotation();
@@ -37,15 +44,15 @@ export default function HikingRouteMap({ geojson, selectedFeatures, onFeatureCli
           data={geojson}
           promoteId="uid" //maplibre string id-t torli, ezert kell uid
         >
-            <Layer
-                id="way-hitbox"
-                type="line"
-                filter={['==', ['get', 'type'], 'way']}
-                paint={{
-                    'line-color': 'transparent',
-                    'line-width': 20  // px-ben, ennyi széles a kattintható sáv
-                }}
-            />
+          <Layer
+            id="way-hitbox"
+            type="line"
+            filter={['==', ['get', 'type'], 'way']}
+            paint={{
+              'line-color': 'transparent',
+              'line-width': 20  // px-ben, ennyi széles a kattintható sáv
+            }}
+          />
           <Layer
             id="hiking"
             type="line"
@@ -56,13 +63,13 @@ export default function HikingRouteMap({ geojson, selectedFeatures, onFeatureCli
             id="hiking-visited"
             type="line"
             filter={['all', ['==', ['get', 'type'], 'way'], ['!=', ['get', 'visited'], false]]}
-            paint={{ 'line-color': '#7A9E6F', 'line-width': 2 }}
+            paint={{ 'line-color': '#FDFF24', 'line-width': 4, "line-opacity": 0.5 }}
           />
         </Source>
-        {selectedFeatures && (<Source
+        {selectedWaysView && (<Source
           id="way-selected"
           type="geojson"
-          data={selectedFeatures[0]}
+          data={selectedWaysView}
         >
            <Layer
             id="selected-layer"

@@ -5,19 +5,21 @@ import HikingRouteMap from '../components/hikingRoute/HikingRouteMap';
 import { supabase } from '../services/SupabaseClient';
 import { useGeojson } from '../components/hikingRoute/useGeojson';
 import { HikingRouteTable } from '../components/hikingRoute/HikingRouteTable';
+import { useSelectedWays } from '../components/hikingRoute/useSelectedWays';
 
 
 export default function HikingRoute(){
-    const [selectedFeatures, setSelectedFeatures] = useState(null);
+    const [selectedFeatureId, setSelectedFeatureId] = useState(null);
+    const [selectedWaysView, setSelectedWaysView] = useState(null);
     
     const { geojson, loading, setVisited, syncToSupabase, pendingEditsCount } = useGeojson();
+    const { selectedWays } = useSelectedWays(geojson, selectedFeatureId);
 
     if (loading) return <div>Betöltés...</div>;
 
     function handleClick(featureId){
         //setVisited(feature.id, true);
-        const s = geojson.features.filter(f => f.properties.uid === featureId)
-        setSelectedFeatures(s);
+        setSelectedFeatureId(featureId);
     }
 
     return(
@@ -27,14 +29,14 @@ export default function HikingRoute(){
                 <div className='mapBox'>
                     <HikingRouteMap 
                         geojson={geojson}
-                        selectedFeatures={selectedFeatures}
+                        selectedWaysView={selectedWaysView}
                         onFeatureClick={(f) => handleClick(f)}
                     />
                 </div>
                 <div className='tableBox'>
                     <HikingRouteTable 
-                        features={selectedFeatures}
-                        onSetVisited={(f,e) => setVisited(f,e)}
+                        selectedWays={selectedWays}
+                        setSelectedWaysView={setSelectedWaysView}
                     />
                 </div>
             </div>
