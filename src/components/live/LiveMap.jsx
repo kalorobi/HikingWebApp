@@ -7,6 +7,7 @@ import mokus from '../../assets/ikons/mokus.svg';
 import car from '../../assets/ikons/car.svg'
 import { Icon } from '../../assets/ikons/MapIcons';
 import LiveView from '../live/LiveView';
+import bbox from '@turf/bbox';
 
 export default function LiveMap({geojson, refress, auth}) {
   
@@ -57,6 +58,19 @@ export default function LiveMap({geojson, refress, auth}) {
       zoom: 15, duration: 2000
     });
     setIs_center(true);
+  }
+
+  function toFullScreen(e) {
+    if(geojson?.features.length === 0) return;
+    const [minLng, minLat, maxLng, maxLat] =
+      bbox(geojson?.features?.filter(f => f.properties.roteType !== 'live')[0]) || null;
+
+    if(!minLng) return;
+
+    mapRef.current.fitBounds(
+      [[minLng, minLat], [maxLng, maxLat],],
+      {padding: 40, duration: 1000, maxZoom: 16,}
+    );
   }
 
   return (
@@ -147,6 +161,9 @@ export default function LiveMap({geojson, refress, auth}) {
         gap: 8, zIndex: 10}}>
         <button style={{ padding: 0, lineHeight: 0 }} onClick={toCeneter}>
           <Icon name={is_center ? "locateFixed" : "locate"}/>
+        </button>
+        <button style={{ padding: 0, lineHeight: 0 }} onClick={toFullScreen}>
+          <Icon name="fullScreen" />
         </button>
         <button style={{ padding: 0, lineHeight: 0 }} onClick={() => {
           activeStyle.id === "openfreemap" ? 

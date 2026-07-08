@@ -1,7 +1,9 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import './HikingRouteTable.css'
 
 export function HikingRouteTable({ selectedWays, setSelectedWaysView, onSetVisited, onSetVisitedDatas }) {
+
+  const [clickedRows, setClickedRows] = useState([])
   
   useEffect(() => {
     const filtered = selectedWays.features.filter(f => f.properties.visited === false);
@@ -10,7 +12,11 @@ export function HikingRouteTable({ selectedWays, setSelectedWaysView, onSetVisit
       ? { ...selectedWays, features: filtered } 
       : null
     );
-}, [selectedWays, setSelectedWaysView])
+}, [selectedWays, setSelectedWaysView]);
+
+  function handleRowClick(feature){
+    console.log('click: ', feature)
+  }
 
   return (
     <div>
@@ -19,7 +25,6 @@ export function HikingRouteTable({ selectedWays, setSelectedWaysView, onSetVisit
           <tr>
             <th>#</th>
             <th>Név</th>
-            <th>Visited</th>
             <th>Dátumok</th>
           </tr>
         </thead>
@@ -29,8 +34,7 @@ export function HikingRouteTable({ selectedWays, setSelectedWaysView, onSetVisit
               key={f.id}
               index={i}
               feature={f}
-              onSetVisited={onSetVisited}
-              onSetVisitedDatas={onSetVisitedDatas}
+              onRowClick={handleRowClick}
             />
           ))}
         </tbody>
@@ -39,32 +43,17 @@ export function HikingRouteTable({ selectedWays, setSelectedWaysView, onSetVisit
   );
 }
 
-function MapTableRow({ index, feature, onSetVisited, onSetVisitedDatas }) {
+function MapTableRow({ index, feature, onRowClick }) {
   const { id, properties } = feature;
 
-  const handleVisitedChange = (e) => {
-    onSetVisited(id, e.target.checked);
-  };
-
-  const handleAddDate = () => {
-    const today = new Date().toISOString().split('T')[0];
-    const current = properties.visitedData ?? [];
-    if (!current.includes(today)) {
-      onSetVisitedDatas(id, [...current, today]);
-    }
-  };
-
   return (
-    <tr>
-        <td>{index}</td>
+    <tr 
+      onClick={() => { onRowClick?.(feature);}}
+      style={{ cursor: "pointer" }}
+      className={properties.visited ? 'row-visited' : ''}
+    >
+      <td>{index} - {properties.uid}</td>
       <td>{properties.originalId ?? '-'}</td>
-      <td>
-        <input
-          type="checkbox"
-          checked={properties.visited ?? false}
-          onChange={handleVisitedChange}
-        />
-      </td>
       <td>
         <span>{(properties.visitedData ?? []).join(', ')}</span>
       </td>

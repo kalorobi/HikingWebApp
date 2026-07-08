@@ -7,7 +7,6 @@ import { useGeojson } from '../components/hikingRoute/useGeojson';
 import { HikingRouteTable } from '../components/hikingRoute/HikingRouteTable';
 import { useSelectedWays } from '../components/hikingRoute/useSelectedWays';
 
-
 export default function HikingRoute(){
     const [selectedFeatureId, setSelectedFeatureId] = useState(null);
     const [selectedWaysView, setSelectedWaysView] = useState(null);
@@ -33,14 +32,17 @@ export default function HikingRoute(){
                         onFeatureClick={(f) => handleClick(f)}
                     />
                 </div>
-                <div className='tableBox'>
+                <div className='viewBox'>
+                    <div className='buttonBox'>GOMB</div>
+                    <div className='tableBox'>
                     <HikingRouteTable 
                         selectedWays={selectedWays}
                         setSelectedWaysView={setSelectedWaysView}
                     />
+                    </div>
                 </div>
             </div>
-            <div className='footer'> F O T E R </div>
+            <div className='footer'> F O O T E R </div>
 
         </div>
     );
