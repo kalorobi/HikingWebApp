@@ -26,13 +26,22 @@ export default function HikingRouteMap({ geojson, selectedWaysView, onFeatureCli
         dragRotate={false}
         cursor={cursor}
         interactiveLayerIds={['way-hitbox']}
-        onClick={(e) => {
-            const featureId = e.features?.[0].id;
-            if (!featureId) return;
-            onFeatureClick(featureId);
-        }}
         onLoad={() => {
           mapRef.current?.getMap()?.touchZoomRotate.disableRotation();
+        }}
+        onClick={(e) => {
+          if(e.features.length === 0) return;
+          const featureId = e.features?.[0].id;
+
+          if (!featureId) return;
+          onFeatureClick(featureId);
+        }}
+        onContextMenu={(e) => {
+          const feature = e.features?.[0];
+
+          if (feature) {
+            console.log("Jobb klikk a layeren:", feature);
+          }
         }}
         initialViewState={{ longitude: 19.826587, latitude: 47.9263058, zoom: 12 }}
         style={{ width: '100%', height: '100%' }}
@@ -42,7 +51,7 @@ export default function HikingRouteMap({ geojson, selectedWaysView, onFeatureCli
           id="way-source"
           type="geojson"
           data={geojson}
-          promoteId="uid" //maplibre string id-t torli, ezert kell uid
+          promoteId="uid"
         >
           <Layer
             id="way-hitbox"
@@ -50,7 +59,7 @@ export default function HikingRouteMap({ geojson, selectedWaysView, onFeatureCli
             filter={['==', ['get', 'type'], 'way']}
             paint={{
               'line-color': 'transparent',
-              'line-width': 20  // px-ben, ennyi széles a kattintható sáv
+              'line-width': 20
             }}
           />
           <Layer
@@ -75,6 +84,25 @@ export default function HikingRouteMap({ geojson, selectedWaysView, onFeatureCli
             id="selected-layer"
             type="line"
             paint={{ 'line-color': 'red', 'line-width': 4 }}
+          />
+          <Layer
+            id="selected-layer-label"
+            type="symbol"
+            minzoom={13}
+            layout={{
+              'text-field': ['get', 'uid'],
+              'text-size': {
+                base: 1,
+                stops: [[13, 10],[16, 10],[20, 22]]
+              },
+              'text-anchor': 'bottom',
+              'text-offset': [0, -0.8],
+              }}
+            paint={{
+              'text-color': '#4A2E1F',
+              'text-halo-color': '#fff',
+              'text-halo-width': 1,
+            }}
           />
         </Source>)}
 

@@ -3,6 +3,7 @@ import Home from './pages/Home';
 import Live from './pages/Live';
 import HikingRoute from './pages/HikingRoute';
 import DashBoard from './pages/DashBoard';
+import { NotFound } from './pages/NotFound';
 
 import './base.css';
 import VisitorsLog from './services/VisitorsLog';
@@ -17,6 +18,7 @@ function App() {
         <Route path="/hikingRoute" element={<HikingRoute />} />
         <Route path="/" element={<Home />} />
         <Route path="/dashboard" element={<DashBoard />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>
   );

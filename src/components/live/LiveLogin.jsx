@@ -2,46 +2,43 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { checkUser } from '../../services/LoginSupabase';
 import { setSession } from '../../services/Storage';
-import './Login.css';
+import './LiveLogin.css';
 
-export default function Login({ auth, setAuth }) {
+export default function LiveLogin({ auth, setAuth }) {
   const navigate = useNavigate();
   const [error, setError] = useState(null);
 
-  async function handleLogin(e) {
-    e.preventDefault();
-
-    const sessionAuth = sessionStorage.getItem("session_auth");
-
-  if(sessionAuth){
-    setAuth(JSON.parse(sessionAuth));
-    return;
+  useEffect(() => {
+    async function LoginUser() {
+    if(auth.user && auth.key) {
+      const sessionAuth = sessionStorage.getItem("session_auth");
+      if(sessionAuth){
+        setAuth(JSON.parse(sessionAuth));
+        return;
+      }
+      else {
+        handleLogin();
+    }
   }
+  }
+  LoginUser();
 
-   if (!auth.user?.trim()) {
-      setError('Add meg a felhasználónevet.');
-      return;
-    }
-    if (!auth.key) {
-      setError('Add meg a jelszót.');
-      return;
-    }
-  
-  
-  try {
-    const user_id = await checkUser(auth.user, auth.key);
+  },[]);
 
-    if (!user_id) {
-        setError('Hibás felhasználónév vagy jelszó.');
-    }
+  async function handleLogin(e) {
+    e?.preventDefault();
+    try {
+        const userId = await checkUser(auth.user, auth.key);
 
-    const updatedAuth = { ...auth, user_id, is_ok: true };
-
-    setAuth(updatedAuth);
-    setSession({key: "session_auth", value: JSON.stringify(updatedAuth)});
-    navigate(`/live/${updatedAuth.user}?key=${encodeURIComponent(updatedAuth.key)}`, { replace: true });
-
-    } catch (err) { setError('Kapcsolati hiba. Próbáld újra.'); }
+        if(userId){
+          const updatedAuth = { ...auth, user_id: userId, is_ok: true };
+          setAuth(updatedAuth);
+          setSession({key: "session_auth", value: JSON.stringify(updatedAuth)});
+          navigate(`/live/${updatedAuth.user}?key=${encodeURIComponent(updatedAuth.key)}`, { replace: true });
+        } else {
+          setError('Hibás felhasználónév vagy jelszó.');
+        }
+      } catch (err) { setError('Kapcsolati hiba. Próbáld újra.');}
   }
 
   return (
