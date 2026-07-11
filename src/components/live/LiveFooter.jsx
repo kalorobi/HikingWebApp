@@ -5,7 +5,7 @@ import { Icon } from '../../assets/ikons/MapIcons';
 import './LiveFooter.css';
 
 
-export default function LiveFooter({geojson}){
+export default function LiveFooter({geojson, user}){
     const [km, setKm] = useState(0);
     const [meter, setMeter] = useState(0);
 
@@ -45,7 +45,7 @@ export default function LiveFooter({geojson}){
         </div>
         <div className='stat'>
             <Icon name="eye" color="#F2E7D5" scale={0.8}/>
-            <span> <LiveView /> </span>
+            <span> <LiveView user={user}/> </span>
         </div>
         </>
     );

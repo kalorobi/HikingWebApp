@@ -101,6 +101,7 @@ export function useLiveCoordinates(user_id) {
         .order('created_at', { ascending: false });
       // limit(1) eltávolítva – az összes megfelelő route bekerül
       if (error) { console.error(error); return; }
+
       setPlannedRoutes(data ?? []);
     };
     fetchPlanned();

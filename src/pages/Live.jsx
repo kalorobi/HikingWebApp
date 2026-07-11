@@ -28,7 +28,7 @@ export default function Live(){
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px', height: '28px' }}>
-                <LiveFooter geojson={geojson}/>
+                <LiveFooter geojson={geojson} user={auth.user}/>
             </div>
             {!auth.is_ok && (<LiveLogin auth={auth} setAuth={setAuth} />)}
         </div>

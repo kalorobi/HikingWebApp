@@ -32,6 +32,7 @@ export default function LiveLogin({ auth, setAuth }) {
 
         if(userId){
           const updatedAuth = { ...auth, user_id: userId, is_ok: true };
+
           setAuth(updatedAuth);
           setSession({key: "session_auth", value: JSON.stringify(updatedAuth)});
           navigate(`/live/${updatedAuth.user}?key=${encodeURIComponent(updatedAuth.key)}`, { replace: true });

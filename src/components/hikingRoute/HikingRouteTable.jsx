@@ -32,6 +32,7 @@ export function HikingRouteTable({ selectedWays, setSelectedWaysView, onSetVisit
           {selectedWays.features.map((f, i) => (
             <MapTableRow
               key={f.id}
+              visited={f.properties.visited}
               index={i}
               feature={f}
               onRowClick={handleRowClick}
@@ -43,14 +44,14 @@ export function HikingRouteTable({ selectedWays, setSelectedWaysView, onSetVisit
   );
 }
 
-function MapTableRow({ index, feature, onRowClick }) {
+function MapTableRow({ index, feature, visited, onRowClick }) {
   const { id, properties } = feature;
 
   return (
     <tr 
       onClick={() => { onRowClick?.(feature);}}
       style={{ cursor: "pointer" }}
-      className={properties.visited ? 'row-visited' : ''}
+      className={visited ? 'row-visited' : ''}
     >
       <td>{index} - {properties.uid}</td>
       <td>{properties.originalId ?? '-'}</td>
