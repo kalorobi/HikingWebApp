@@ -12,6 +12,6 @@ jobs:
     steps:
       - name: Send a request to Supabase
         run: |
-          curl -X GET "${{ secrets.SUPABASE_URL }}/rest/v1/auth/health" \
+          curl -X GET "${{ secrets.SUPABASE_URL }}/rest/v1/health" \
           -H "apikey: ${{ secrets.SUPABASE_KEY }}" \
           -H "Authorization: Bearer ${{ secrets.SUPABASE_KEY }}"

@@ -4,7 +4,7 @@ import { supabase } from "../../services/SupabaseClient";
 import { getVisitorId } from "../../services/Storage";
 import "./LiveView.css"
 
-export default function LiveView() {
+export default function LiveView(user) {
   const [viewers, setViewers] = useState([]);
   const [now, setNow] = useState(Date.now());
   const me = useRef(0)
@@ -22,7 +22,7 @@ export default function LiveView() {
     const viewerId = getVisitorId();
     me.current = viewerId;
 
-    const channel = supabase.channel("page-viewers");
+    const channel = supabase.channel("page-viewers-${user}");
 
     const updateViewers = () => {
       const state = channel.presenceState();

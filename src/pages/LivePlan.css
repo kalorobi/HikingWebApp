@@ -1,0 +1,62 @@
+.planBox {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  width: 100%;
+  margin: 0;
+}
+
+.header, .footer {
+  height: 32px;
+  flex-shrink: 0;
+}
+
+.mainBox {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+}
+
+.planMapBox {
+  flex: 3;
+  background-color: var(--color-moss);
+}
+
+.viewBox {
+  flex: 0 0 30%;
+  padding-left: 10px;
+  padding-right: 10px;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+}
+.buttonBox {
+  flex: 0 0 12%;
+}
+.tableBox {
+  flex: 1;
+}
+
+@media (max-width: 768px) {
+  .mainBox {
+    flex-direction: column;
+  }
+
+  .planMapBox {
+    flex: 2; /* 2/3 */
+  }
+
+  .viewBox {
+    flex: 0 0 33%;
+    padding-top: 10px;
+    overflow: auto;
+    display: flex;
+    flex-direction: row;
+  }
+  .buttonBox {
+    flex: 0 0 25%;
+  }
+  .tableBox {
+    flex: 1;
+  }
+}
