@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Tooltip } from 'react-tooltip';
 import { supabase } from "../../services/SupabaseClient";
-import { getVisitorId } from "../../services/Storage";
+import { getVisitorId } from "../../services/indexedDb/Storage";
 import "./LiveView.css"
 
 export default function LiveView(user) {

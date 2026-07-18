@@ -1,4 +1,4 @@
-import { supabase } from './SupabaseClient';
+import { supabase } from '../SupabaseClient';
 
 export async function checkUser(user, key){
   

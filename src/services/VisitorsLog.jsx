@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { supabase } from './SupabaseClient';
-import { getSessionId, getVisitorId } from "./Storage";
+import { getSessionId, getVisitorId } from "./indexedDb/Storage";
 
 
 function getDeviceType() {
