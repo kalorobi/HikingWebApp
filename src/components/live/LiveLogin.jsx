@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { checkUser } from '../../services/LoginSupabase';
-import { setSession } from '../../services/Storage';
+import { checkUser } from '../../services/supabase/LoginSupabase';
+import { setSession } from '../../services/indexedDb/Storage';
 import './LiveLogin.css';
 
 export default function LiveLogin({ auth, setAuth }) {

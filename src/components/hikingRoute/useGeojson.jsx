@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import db from '../../services/HikingRouteIndexedDb';
-import { downloadGeojson, uploadGeojson } from '../../services/HikingRouteSupabase';
+import db from '../../services/indexedDb/HikingRouteIndexedDb';
+import { downloadGeojson, uploadGeojson } from '../../services/supabase/HikingRouteSupabase';
 import { applyAllEdits, validateGeojsonAgainstEdits, isToday, injectIds } from './geojsonHelpers';
 
 export function useGeojson() {

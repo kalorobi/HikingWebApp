@@ -1,4 +1,4 @@
-import { supabase } from "./SupabaseClient";
+import { supabase } from "../SupabaseClient";
 
 const BUCKET = 'hikingRoute';
 const FILE_PATH = 'latest.geojson';

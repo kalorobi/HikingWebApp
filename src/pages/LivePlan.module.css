@@ -17,9 +17,8 @@
   flex-direction: row;
 }
 
-.planMapBox {
+.mapBox {
   flex: 3;
-  background-color: var(--color-moss);
 }
 
 .viewBox {
@@ -42,7 +41,7 @@
     flex-direction: column;
   }
 
-  .planMapBox {
+  .mapBox {
     flex: 2; /* 2/3 */
   }
 

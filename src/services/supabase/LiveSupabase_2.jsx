@@ -1,6 +1,6 @@
 //FULL CLAUDE AI - pici szogelessel :)
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { supabase } from './SupabaseClient';
+import { supabase } from '../SupabaseClient';
 
 const ORS_API_KEY =  import.meta.env.VITE_ORS_API_KEY;
 const ORS_PROFILE = 'foot-hiking';
@@ -27,8 +27,7 @@ async function fetchOrsRoute(coords) {
 }
 
 export function useLiveCoordinates(user_id) {
-
-  const [plannedRoutes, setPlannedRoutes] = useState([]); // több planned route
+  const [plannedRoute, setPlannedRoute] = useState(null);
   const [livePoints, setLivePoints] = useState([]);
   const [flatCoords, setFlatCoords] = useState([]);
   const [isRefetching, setIsRefetching] = useState(false);
@@ -87,7 +86,7 @@ export function useLiveCoordinates(user_id) {
   }, []);
 
   // -------------------------
-  // PLANNED ROUTES FETCH (összes aktív és kész)
+  // PLANNED ROUTE FETCH
   // -------------------------
   useEffect(() => {
     if (user_id == null || user_id < 0) return;
@@ -98,11 +97,10 @@ export function useLiveCoordinates(user_id) {
         .eq('user_id', user_id)
         .eq('is_active', true)
         .eq('is_ready', true)
-        .order('created_at', { ascending: false });
-      // limit(1) eltávolítva – az összes megfelelő route bekerül
+        .order('created_at', { ascending: false })
+        .limit(1);
       if (error) { console.error(error); return; }
-
-      setPlannedRoutes(data ?? []);
+      setPlannedRoute(data?.[0] ?? null);
     };
     fetchPlanned();
   }, [user_id]);
@@ -248,22 +246,8 @@ export function useLiveCoordinates(user_id) {
   // GEOJSON BUILD
   // -------------------------
   const geojson = useMemo(() => {
-    // Minden aktív+kész planned route → külön LineString feature
-    const plannedFeatures = plannedRoutes.flatMap(route => {
-      const coords = route?.geojson?.features?.[0]?.geometry?.coordinates ?? null;
-      if (!coords) return [];
-      return [{
-        type: 'Feature',
-        geometry: { type: 'LineString', coordinates: coords },
-        properties: {
-          routeType: 'planned',
-          plan_name: route.plan_name,
-          mountain: route.mountain,
-          description: route.description,
-          link: route.link,
-        },
-      }];
-    });
+    const plannedCoords =
+      plannedRoute?.geojson?.features?.[0]?.geometry?.coordinates ?? null;
 
     const hikingPoints = livePoints.filter(
       p => p.properties?.mode === 'hiking'
@@ -277,7 +261,19 @@ export function useLiveCoordinates(user_id) {
     return {
       type: 'FeatureCollection',
       features: [
-        ...plannedFeatures,
+        ...(plannedCoords
+          ? [{
+              type: 'Feature',
+              geometry: { type: 'LineString', coordinates: plannedCoords },
+              properties: {
+                routeType: 'planned',
+                plan_name: plannedRoute?.plan_name,
+                mountain: plannedRoute?.mountain,
+                description: plannedRoute?.description,
+                link: plannedRoute?.link,
+              },
+            }]
+          : []),
 
         ...(liveLineCoords
           ? [{
@@ -294,6 +290,7 @@ export function useLiveCoordinates(user_id) {
               properties: { 
                 ...orsMeta.current,
                 routeType: 'live-flat'
+
               },
             }]
           : []),
@@ -301,7 +298,7 @@ export function useLiveCoordinates(user_id) {
         ...livePoints,
       ],
     };
-  }, [plannedRoutes, livePoints, flatCoords]);
+  }, [plannedRoute, livePoints, flatCoords]);
 
   return { geojson, refetchMissingPoints, isRefetching };
 }

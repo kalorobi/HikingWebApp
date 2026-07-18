@@ -6,6 +6,7 @@ import bbox from '@turf/bbox';
 import { wayHitbox } from './HikingRouteMapLayers';
 
 export default function HikingRouteMap({ geojson, selectedWaysView, onFeatureClick }) {
+
   const mapRef = useRef(null);
   const [cutWay, setCutWay] = useState({"type": "FeatureCollection", features: []});
   const [cursor, setCursor] = useState('auto');
