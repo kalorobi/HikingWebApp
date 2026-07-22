@@ -36,10 +36,10 @@ function App() {
           />
 
           <Route
-            path="/livePlan/:mountain?"
+            path="/livePlan/:mountain?/:routeId?"
             element={
               <ProtectedRoute>
-                <LivePlanRouter />
+                  <LivePlanRouter />
               </ProtectedRoute>
             }
           />
