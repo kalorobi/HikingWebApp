@@ -11,17 +11,17 @@
   flex-shrink: 0;
 }
 
-.mainBox {
+.planMainBox {
   flex: 1;
   display: flex;
   flex-direction: row;
 }
 
-.mapBox {
+.planMapBox {
   flex: 3;
 }
 
-.viewBox {
+.planViewBox {
   flex: 0 0 30%;
   padding-left: 10px;
   padding-right: 10px;
@@ -29,33 +29,21 @@
   display: flex;
   flex-direction: column;
 }
-.buttonBox {
-  flex: 0 0 12%;
-}
-.tableBox {
-  flex: 1;
-}
 
 @media (max-width: 768px) {
-  .mainBox {
+  .planMainBox {
     flex-direction: column;
   }
 
-  .mapBox {
+  .planMapBox {
     flex: 2; /* 2/3 */
   }
 
-  .viewBox {
+  .planViewBox {
     flex: 0 0 33%;
     padding-top: 10px;
     overflow: auto;
     display: flex;
     flex-direction: row;
-  }
-  .buttonBox {
-    flex: 0 0 25%;
-  }
-  .tableBox {
-    flex: 1;
   }
 }
