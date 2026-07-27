@@ -9,6 +9,7 @@ export function useLivePlanRoutes(mountain) {
       const { data, error } = await supabase
         .from('live_plan_routes')
         .select('*')
+        .eq('is_ok', false)
         .eq('mountain', mountain);
 
       if (error) {

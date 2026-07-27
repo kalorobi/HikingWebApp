@@ -1,25 +1,82 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import RouteCard from '../components/livePlan/LivePlanRouteCard';
 import { useLivePlanRoutes } from '../services/query/useLivePlanRoutes';
-import './LivePlanMountain.css'
+import { useUpdateLivePlanRoute } from '../services/query/useLivePlanMutation';
+import './LivePlanMountain.css';
+import ConfirmDialog from '../components/general/ConfirmDialog';
+import LivePlanLoading from '../components/livePlan/LivePlanLoading';
 
 export default function LivePlanMountain(){
     const { mountain } = useParams();
+    const [searchParams] = useSearchParams();
+    const filter = searchParams.get('filter');
     const navigate = useNavigate();
+    const [confirmRoute, setConfirmRoute] = useState(null);
 
-    const { data: routes = [] } = useLivePlanRoutes(mountain);
+    const { data: routes = [], isLoading } = useLivePlanRoutes(mountain);
+    const { mutate: updateRoute, isPending: isUpdating } = useUpdateLivePlanRoute();
 
-    function handleRouteClick(data){
-        navigate(`/livePlan//${data.mountain}//${data.id}`);
+    if(isLoading) return (<LivePlanLoading />);
+    if(isUpdating) return (<div>UPDATE...</div>);
+
+    function handleRouteClick(data, action) {
+        if (!action) {
+            navigate(`/livePlan/${data.mountain}/${data.id}`);
+            return;
+        }
+
+        switch (action) {
+            case 'set_active':
+                setConfirmRoute(data);
+                break;
+        }
+    }
+    function confirmAction() {
+        if (!confirmRoute) return;
+
+        updateRoute({
+            id: confirmRoute.id,
+            user_id: confirmRoute.user_id,
+            mountain,
+            is_active: !confirmRoute.is_active
+        });
+
+        setConfirmRoute(null);
     }
 
+    const filteredRoutes = routes.filter((route) => {
+        if (filter === 'route') {return route.is_ready === true;}
+        if (filter === 'active') {return route.is_active === true;}
+        return true;
+    });
+
     return (
-        <div className='route-list'>
-            {routes?.map((route) => (
-                <RouteCard key={route.id} data={route} onClick={handleRouteClick}/>
-                
-            ))}
+        <div className='route-list-box'>
+            <div className='route-h1'>{mountain} túratervek</div>
+            <div className='route-list'>
+                {filteredRoutes.map((route) => (
+                    <RouteCard
+                        key={route.id}
+                        data={route}
+                        onClick={handleRouteClick}
+                    />
+                ))}
+            </div>
+
+            <ConfirmDialog
+            open={!!confirmRoute}
+            title="Megerősítés"
+            text={
+                confirmRoute?.is_active
+                    ? "Biztosan kikapcsolod ezt az útvonalat?"
+                    : "Biztosan aktiválod ezt az útvonalat?"
+            }
+            onCancel={() => setConfirmRoute(null)}
+            onConfirm={confirmAction}
+            />
+
+
         </div>
     );
 }
