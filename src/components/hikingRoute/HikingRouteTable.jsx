@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import './HikingRouteTable.css'
+import logger from '../../utils/Logger';
 
 export function HikingRouteTable({ selectedWays, setSelectedWaysView, onSetVisited, onSetVisitedDatas }) {
 

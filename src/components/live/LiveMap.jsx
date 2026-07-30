@@ -8,7 +8,7 @@ import car from '../../assets/ikons/car.svg'
 import { Icon } from '../../assets/ikons/MapIcons';
 import LiveView from '../live/LiveView';
 import bbox from '@turf/bbox';
-import logger from '../../utils/logger';
+import logger from '../../utils/Logger';
 
 const log = logger.scope("LiveMap");
 
