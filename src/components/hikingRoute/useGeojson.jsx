@@ -2,6 +2,9 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import db from '../../services/indexedDb/HikingRouteIndexedDb';
 import { downloadGeojson, uploadGeojson } from '../../services/supabase/HikingRouteSupabase';
 import { applyAllEdits, validateGeojsonAgainstEdits, isToday, injectIds } from './geojsonHelpers';
+import Logger from '../../utils/Logger';
+
+const log = Logger.scope("useGeojson");
 
 export function useGeojson() {
   const [baseGeojson, setBaseGeojson] = useState(null); // a "tiszta", letöltött verzió
@@ -23,8 +26,14 @@ export function useGeojson() {
 
         let geojson;
         if (stored && isToday(stored.downloaded_at)) {
+
+          log.debug('geojson load store');
+
           geojson = stored.data;
         } else {
+
+          log.debug('geojson download supabase');
+
           geojson = await downloadGeojson();
           //maplibre megeszi az id-t!
           geojson = injectIds(geojson); 
@@ -42,6 +51,9 @@ export function useGeojson() {
         setEdits(storedEdits);
         setMergedGeojson(applyAllEdits(geojson, storedEdits));
       } catch (e) {
+
+        log.error('Inic error', e);
+
         setError(e);
       } finally {
         setLoading(false);
@@ -51,6 +63,8 @@ export function useGeojson() {
 
   // --- 2. lépés: szerkesztés mentése (db + state) ---
   const dispatchEdit = useCallback(async (type, featureId, payload) => {
+    log.debug('dispatch edit');
+
     const edit = {
       featureId,
       type, // 'SET_VISITED' | 'SET_VISITED_DATAS'
@@ -58,6 +72,8 @@ export function useGeojson() {
       createdAt: new Date().toISOString(),
       synced: false
     };
+
+    log.debug('Edit save localDb');
 
     const localId = await db.editLog.add(edit);
     const savedEdit = { ...edit, localId };
@@ -88,7 +104,7 @@ export function useGeojson() {
     // 4. ellenőrzés: minden módosítás tényleg benne van-e
     const { valid, problems } = validateGeojsonAgainstEdits(finalGeojson, edits);
     if (!valid) {
-      console.error('Validációs hiba feltöltés előtt:', problems);
+      log.error('Validációs hiba feltöltés előtt:', problems);
       throw new Error('A geojson nem tartalmazza az összes módosítást: ' + problems.join(', '));
     }
 
@@ -109,6 +125,7 @@ export function useGeojson() {
 
   // --- kényszerített újratöltés (pl. pull-to-refresh) ---
   const forceRefresh = useCallback(async () => {
+    log.debug('forcee refresh');
     setLoading(true);
     try {
       const geojson = await downloadGeojson();

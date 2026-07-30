@@ -1,11 +1,13 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-
 import './HikingRoute.css';
 import HikingRouteMap from '../components/hikingRoute/HikingRouteMap';
 import { supabase } from '../services/SupabaseClient';
 import { useGeojson } from '../components/hikingRoute/useGeojson';
 import { HikingRouteTable } from '../components/hikingRoute/HikingRouteTable';
 import { useSelectedWays } from '../components/hikingRoute/useSelectedWays';
+import logger from '../utils/Logger'
+
+const log = logger.scope("HikingRoute");
 
 export default function HikingRoute(){
     const [selectedFeatureId, setSelectedFeatureId] = useState(null);
@@ -14,13 +16,12 @@ export default function HikingRoute(){
     const { geojson, loading, setVisited, syncToSupabase, pendingEditsCount } = useGeojson();
     const { selectedWays } = useSelectedWays(geojson, selectedFeatureId);
 
-    if (loading) return <div>Betöltés...</div>;
-
     function handleClick(featureId){
         //setVisited(feature.id, true);
         setSelectedFeatureId(featureId);
     }
 
+    if (loading) return <div>Betöltés...</div>;
     return(
         <div className='hikingBox'>
             <div className='header'>Hiking Route v0.0</div>
