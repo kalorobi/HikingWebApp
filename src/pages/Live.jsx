@@ -6,7 +6,7 @@ import { useLiveCoordinates } from '../services/supabase/LiveSupabase_3';
 import { Icon } from '../assets/ikons/MapIcons';
 import LiveFooter from '../components/live/LiveFooter'
 import './Live.css';
-import logger from "../utils/logger";
+import logger from '../utils/Logger';
 
 const log = logger.scope("Live");
 
