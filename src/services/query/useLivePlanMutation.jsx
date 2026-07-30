@@ -19,6 +19,9 @@ export function useInsertLivePlanRoute() {
       queryClient.invalidateQueries({
         queryKey: ['live-plan-routes', variables.mountain],
       });
+      queryClient.invalidateQueries({
+        queryKey: ["mountains", variables.user_id],
+      });
     },
   });
 }
@@ -50,14 +53,8 @@ export function useUpdateLivePlanRoute() {
 }
 
 /*
-import { useLivePlanRoutes } from '../hooks/useLivePlanRoutes';
-import { useInsertLivePlanRoute, useUpdateLivePlanRoute } from '../hooks/useLivePlanRoutesMutations';
-
-function RoutesPage({ mountain }) {
   const { data: routes, isLoading } = useLivePlanRoutes(mountain);
   const { mutate: insertRoute, isPending: isInserting } = useInsertLivePlanRoute();
-  const { mutate: updateRoute, isPending: isUpdating } = useUpdateLivePlanRoute();
-
   const handleCreate = () => {
     insertRoute({
       mountain,
@@ -65,32 +62,4 @@ function RoutesPage({ mountain }) {
       status: 'open',
     });
   };
-
-  const handleUpdate = (route) => {
-    updateRoute({
-      id: route.id,
-      mountain, // ez kell az invalidáláshoz, de nem kerül update-be
-      status: 'closed',
-    });
-  };
-
-  if (isLoading) return <div>Betöltés...</div>;
-
-  return (
-    <div>
-      <button onClick={handleCreate} disabled={isInserting}>
-        Új útvonal hozzáadása
-      </button>
-
-      {routes.map((route) => (
-        <div key={route.id}>
-          {route.name} — {route.status}
-          <button onClick={() => handleUpdate(route)} disabled={isUpdating}>
-            Lezárás
-          </button>
-        </div>
-      ))}
-    </div>
-  );
-}
 */

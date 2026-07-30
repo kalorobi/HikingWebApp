@@ -8,6 +8,9 @@ import { centerOfMass } from '@turf/center-of-mass';
 import { destination } from "@turf/destination";
 import { point } from '@turf/helpers';
 import MapMarker from './MapMarker';
+import logger from '../../utils/Logger';
+
+const log = logger.scope('LivePlanMap');
 
 export default function LivePlanMap({plans, setSelectedPlan}){
 
@@ -29,6 +32,9 @@ export default function LivePlanMap({plans, setSelectedPlan}){
                     [Mountains[plan.mountain]?.lng || 0, 
                     Mountains[plan.mountain]?.lat || 0]
                 );
+                if(po.geometry.coordinates[0] === 0 && po.geometry.coordinates[1] === 0)
+                    log.warn('Mountains data is empty', plan.mountain);
+
                 const bearing = (Math.floor(Math.random() * 25) * 15 ) -180;
                 const desc = Math.floor(Math.random() * 100) + 100;
 
@@ -89,9 +95,29 @@ export default function LivePlanMap({plans, setSelectedPlan}){
                             type="circle"
                             paint={{
                                 'circle-radius': 5,
-                                'circle-color': '#D4813A'
+                                'circle-color': plan.is_active? '#7A9E6F': '#D4813A'
                             }}
                             filter={["==", "$type", "Point"]}
+                        />
+                        <Layer 
+                            id={`geojson-point-label${plan.id}`}
+                            type="symbol"
+                            minzoom={12}
+                            filter={["==", "$type", "Point"]}
+                            layout={{
+                                'text-field': ['get', 'name'],
+                                'text-size': {
+                                    base: 1,
+                                    stops: [[12, 12], [16, 14], [20, 22]]
+                                },
+                                'text-anchor': 'bottom',
+                                'text-offset': [0, -0.8],
+                            }}
+                            paint={{
+                                'text-color': '#4A2E1F',
+                                'text-halo-color': '#fff',
+                                'text-halo-width': 1,
+                            }}
                         />
                     </Source>
                 )}
