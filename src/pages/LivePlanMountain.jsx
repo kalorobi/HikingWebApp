@@ -6,6 +6,7 @@ import { useUpdateLivePlanRoute } from '../services/query/useLivePlanMutation';
 import './LivePlanMountain.css';
 import ConfirmDialog from '../components/general/ConfirmDialog';
 import LivePlanLoading from '../components/livePlan/LivePlanLoading';
+import { Icon } from '../assets/ikons/MapIcons';
 
 export default function LivePlanMountain(){
     const { mountain } = useParams();
@@ -53,7 +54,14 @@ export default function LivePlanMountain(){
 
     return (
         <div className='route-list-box'>
-            <div className='route-h1'>{mountain} túratervek</div>
+            <div className='route-head'>
+                <div className='route-back' onClick={() => navigate(-1)}>
+                    <Icon name='back' color='var(--color-text)' />
+                </div>
+                <div className='route-h1'>
+                    {mountain} túratervek
+                </div>
+            </div>
             <div className='route-list'>
                 {filteredRoutes.map((route) => (
                     <RouteCard

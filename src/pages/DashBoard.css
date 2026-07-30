@@ -1,7 +1,7 @@
 .visitors-dashboard {
   max-width: 450px;
-  margin: 48px auto;
-  font-family: system-ui, -apple-system, sans-serif;
+  margin: 21px auto;
+  padding: 0 16px;
   color: var(--color-text);
 }
  
@@ -50,6 +50,8 @@
 .visitors-dashboard__table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
+  padding: 10px;
 }
  
 .visitors-dashboard__table th {
@@ -60,17 +62,22 @@
   letter-spacing: 0.03em;
   color: var(--color-moss);
   background-color: var(--color-base);
-  padding: 2px 12px 8px;
+  padding: 2px 8px 8px;
   border-bottom: 1px solid var(--color-text)
 }
  
 .visitors-dashboard__table th:last-child,
 .visitors-dashboard__table td:last-child {
   text-align: right;
+  width: 70%;
+}
+.visitors-dashboard__table th:last-child,
+.visitors-dashboard__table td:last-child {
+  width: 30%;
 }
  
 .visitors-dashboard__table td {
-  padding: 10px 0;
+  padding: 10px 10px;
   border-bottom: 1px solid var(--color-text);
   font-size: 14px;
 }

@@ -4,7 +4,7 @@ import { supabase } from "../../services/SupabaseClient";
 import { getVisitorId } from "../../services/indexedDb/Storage";
 import "./LiveView.css"
 
-export default function LiveView(user) {
+export default function LiveView({auth}) {
   const [viewers, setViewers] = useState([]);
   const [now, setNow] = useState(Date.now());
   const me = useRef(0)
@@ -19,10 +19,11 @@ export default function LiveView(user) {
   }, []);
 
   useEffect(() => {
+    if(!auth.is_ok) return;
     const viewerId = getVisitorId();
     me.current = viewerId;
 
-    const channel = supabase.channel("page-viewers-${user}");
+    const channel = supabase.channel(`page-viewers-${auth.user}`);
 
     const updateViewers = () => {
       const state = channel.presenceState();
@@ -53,7 +54,7 @@ export default function LiveView(user) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [auth.is_ok]);
 
   function formatDuration(ms) {
     const sec = Math.floor(ms / 1000);

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from 'react-router-dom';
 import MountainCard from "../components/livePlan/LivePlanMountainCard";
 import { useLivePlanMountains } from "../services/query/useLivPlanMountains";
@@ -8,9 +8,7 @@ import LivePlanLoading from "../components/livePlan/LivePlanLoading";
 export default function LivePlanMobile(){
   const navigate = useNavigate();
 
-  const { data: mountains = [], isLoading } = useLivePlanMountains(2);
-
-  if(isLoading) return (<LivePlanLoading />);
+  const { data: mountains = [], isLoading, isSuccess } = useLivePlanMountains(2);
 
   function handleCardClick(data, filter ='') {
     if(filter !==''){
@@ -21,9 +19,25 @@ export default function LivePlanMobile(){
     }
   }
 
- return (
+ const { count, total, ready } = useMemo(() => {
+  if (!isSuccess) return { count: 0, total: 0, ready: 0 };
+
+  return mountains.reduce(
+    (acc, m) => {
+      acc.total += m.total_routes;
+      acc.ready += m.ready_routes;
+      acc.count += 1;
+      return acc;
+    },
+    { count: 0, total: 0, ready: 0 }
+  );
+}, [isSuccess, mountains]);
+
+  if(isLoading) return (<LivePlanLoading />);
+
+  return (
     <div className="mountain-box">
-      <div className="plan-h1">Túra terv lista</div>
+      <div className="plan-h1">Túra terv lista ({total}/{ready}) </div>
       <div className="mountain-grid">
         {mountains.map((m) => (
           <MountainCard 

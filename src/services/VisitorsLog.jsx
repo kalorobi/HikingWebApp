@@ -2,6 +2,9 @@ import { useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { supabase } from './SupabaseClient';
 import { getSessionId, getVisitorId } from "./indexedDb/Storage";
+import logger from '../utils/Logger';
+
+const log = logger.scope('VisitorLog');
 
 
 function getDeviceType() {
@@ -19,21 +22,18 @@ export function visitorTrack(event="pageview"){
 }
 export default function VisitorsLog() {
     const location = useLocation();
-    const called = useRef(false);
 
     let visitorId = getVisitorId();
     let sessionId = getSessionId();
 
     useEffect(() => {
-        if (called.current) return;
-        called.current = true;
 
         async function callFunction() {
         const { data, error } = await supabase.functions.invoke(
             'matra_visitors',
             {
                 body: {
-                    path: location.pathname,
+                    path: location.pathname + window.location.search,
                     referrer: document.referrer || null,
                     language: navigator.language,
                     visitor_id: visitorId,
@@ -42,9 +42,9 @@ export default function VisitorsLog() {
                 }
             }
         );
-        if (error) {console.log(error);return;}
+        if (error) log.error('database', error);
     }
     callFunction();
 
-},[location.pathname])
+},[location.pathname, location.search])
 }

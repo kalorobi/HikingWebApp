@@ -10,7 +10,8 @@ export function useLivePlanRoutes(mountain) {
         .from('live_plan_routes')
         .select('*')
         .eq('is_ok', false)
-        .eq('mountain', mountain);
+        .eq('mountain', mountain)
+        .order('id', { ascending: false });;
 
       if (error) {
         throw error;
