@@ -19,16 +19,21 @@ export function applyEdit(geojson, edit) {
       if (f.id !== edit.featureId) return f;
 
       if (edit.type === 'SET_VISITED') {
-        return {
-          ...f,
-          properties: { ...f.properties, visited: edit.payload }
-        };
-      }
+        const prevDates = f.properties.visitedDates ?? [];
+        const date = edit.payload.date;
 
-      if (edit.type === 'SET_VISITED_DATAS') {
+        // duplikátum elkerülése: ha ugyanaz a dátum már szerepel, nem adjuk hozzá újra
+        const nextDates = date && !prevDates.includes(date)
+          ? [...prevDates, date]
+          : prevDates;
+
         return {
           ...f,
-          properties: { ...f.properties, visitedData: edit.payload }
+          properties: {
+            ...f.properties,
+            visited: edit.payload.visited,
+            visitedDates: nextDates
+          }
         };
       }
 
@@ -48,18 +53,34 @@ export function validateGeojsonAgainstEdits(geojson, edits) {
   const byFeature = new Map(geojson.features.map((f) => [f.id, f]));
   const problems = [];
 
+  // featureId szerint csoportosítjuk az edit-eket, hogy tudjuk mi az adott feature
+  // UTOLSÓ visited állapota, és mely dátumoknak KELL szerepelniük a tömbben
+  const byFeatureEdits = new Map();
   for (const edit of edits) {
-    const feature = byFeature.get(edit.featureId);
+    if (edit.type !== 'SET_VISITED') continue;
+    if (!byFeatureEdits.has(edit.featureId)) byFeatureEdits.set(edit.featureId, []);
+    byFeatureEdits.get(edit.featureId).push(edit);
+  }
+
+  for (const [featureId, featureEdits] of byFeatureEdits) {
+    const feature = byFeature.get(featureId);
     if (!feature) {
-      problems.push(`Hiányzó feature: ${edit.featureId}`);
+      problems.push(`Hiányzó feature: ${featureId}`);
       continue;
     }
-    if (edit.type === 'SET_VISITED' && feature.properties.visited !== edit.payload) {
-      problems.push(`Eltérés visited mezőben: ${edit.featureId}`);
+
+    // az utolsó edit adja a végleges 'visited' állapotot
+    const lastEdit = featureEdits[featureEdits.length - 1];
+    if (feature.properties.visited !== lastEdit.payload.visited) {
+      problems.push(`Eltérés visited mezőben: ${featureId}`);
     }
-    if (edit.type === 'SET_VISITED_DATAS') {
-      const same = JSON.stringify(feature.properties.visitedData) === JSON.stringify(edit.payload);
-      if (!same) problems.push(`Eltérés visitedData mezőben: ${edit.featureId}`);
+
+    // minden edit dátumának szerepelnie kell a visitedDates tömbben
+    const expectedDates = [...new Set(featureEdits.map((e) => e.payload.date).filter(Boolean))];
+    const actualDates = feature.properties.visitedDates ?? [];
+    const missing = expectedDates.filter((d) => !actualDates.includes(d));
+    if (missing.length > 0) {
+      problems.push(`Hiányzó dátum(ok) a visitedDates mezőben: ${featureId} (${missing.join(', ')})`);
     }
   }
 

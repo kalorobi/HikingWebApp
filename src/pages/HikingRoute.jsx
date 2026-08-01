@@ -5,7 +5,8 @@ import { supabase } from '../services/SupabaseClient';
 import { useGeojson } from '../components/hikingRoute/useGeojson';
 import { HikingRouteTable } from '../components/hikingRoute/HikingRouteTable';
 import { useSelectedWays } from '../components/hikingRoute/useSelectedWays';
-import logger from '../utils/Logger'
+import logger from '../utils/Logger';
+import LoggerPanel from '../utils/LoggerPanel';
 
 const log = logger.scope("HikingRoute");
 
@@ -20,9 +21,21 @@ export default function HikingRoute(){
         //setVisited(feature.id, true);
         setSelectedFeatureId(featureId);
     }
+    const handleConfirmVisited = useCallback(() => {
+        
+        if (!selectedWaysView?.features?.length) return;
+
+        const featureIds = selectedWaysView.features.map((f) => f.id);
+        const today = "2025-10-28"//new Date().toISOString().slice(0, 10);
+
+        setVisited(featureIds, true, today);
+        log.debug('setVisited');
+
+    }, [selectedWaysView, setVisited]);
 
     if (loading) return <div>Betöltés...</div>;
     return(
+        <>
         <div className='hikingBox'>
             <div className='header'>Hiking Route v0.0</div>
             <div className='mainBox'>
@@ -34,11 +47,16 @@ export default function HikingRoute(){
                     />
                 </div>
                 <div className='viewBox'>
-                    <div className='buttonBox'>GOMB</div>
+                    <div className='buttonBox'>
+                        <button onClick={handleConfirmVisited} disabled={!selectedWaysView?.features?.length}>
+                            ok
+                        </button>
+                    </div>
                     <div className='tableBox'>
                     <HikingRouteTable 
                         selectedWays={selectedWays}
                         setSelectedWaysView={setSelectedWaysView}
+                        onSetVisited={setVisited}
                     />
                     </div>
                 </div>
@@ -46,5 +64,8 @@ export default function HikingRoute(){
             <div className='footer'> F O O T E R </div>
 
         </div>
+
+        <LoggerPanel />
+        </>
     );
 }

@@ -28,6 +28,7 @@ export default function HikingRouteMap({ geojson, selectedWaysView, onFeatureCli
     const featureId = e.features?.[0].id;
 
     if (!featureId) return;
+    setCutWay(prew => ({...prew, features:[]}));
     onFeatureClick(featureId);
   }
 
@@ -69,7 +70,7 @@ export default function HikingRouteMap({ geojson, selectedWaysView, onFeatureCli
           <Layer
             id="hiking-visited"
             type="line"
-            filter={['all', ['==', ['get', 'type'], 'way'], ['!=', ['get', 'visited'], false]]}
+            filter={['all', ['==', ['get', 'type'], 'way'], ['==', ['get', 'visited'], true]]}
             {...mapLayers.visited}
           />
         </Source>

@@ -7,6 +7,7 @@ import { Icon } from '../assets/ikons/MapIcons';
 import LiveFooter from '../components/live/LiveFooter'
 import './Live.css';
 import logger from '../utils/Logger';
+import LoggerPanel from '../utils/LoggerPanel';
 
 const log = logger.scope("Live");
 
@@ -25,10 +26,11 @@ export default function Live(){
     const { geojson, refetchMissingPoints, isRefetching } = useLiveCoordinates(auth.user_id);
 
     useEffect(() => {
-        if(geojson.features.length > 0) log.debug("Geojson is ready");
+        if(geojson.features.length > 0) log.info("Geojson is ready");
     },[geojson]);
 
     return (
+        <>
         <div style={{ width: '100%', height: '100dvh', display: 'flex', flexDirection: 'column' }}>
             <div style={{flex: '1'}}>
                 <LiveMap geojson={geojson} refress={refetchMissingPoints} auth={auth}/>
@@ -39,5 +41,7 @@ export default function Live(){
             </div>
             {!auth.is_ok && (<LiveLogin auth={auth} setAuth={setAuth} />)}
         </div>
+        <LoggerPanel />
+        </>
     )
 }
