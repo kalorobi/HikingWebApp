@@ -37,7 +37,7 @@ export const visited = {
 
 export const selected = {
     paint: { 
-        'line-color': 'red',
+        'line-color': '#5B8FA8',
         'line-width': 4 
     },
     layout: {
@@ -51,7 +51,7 @@ export const selectedLabel = {
     layout: {
         'symbol-placement': 'line',
         'symbol-spacing': 200,
-        'text-field': ['get', 'uid'],
+        'text-field': ['get', 'originalId'],
         'text-size': { base: 1, stops: [[13, 10],[16, 10],[20, 22]]},
         'text-anchor': 'bottom', 'text-offset': [0, -0.8],
     },
@@ -64,7 +64,7 @@ export const selectedLabel = {
 
 export const cut = {
     paint: {
-        'line-color': 'blue',
+        'line-color': '#3A8D60',
         'line-width': 4 
     }
 }
@@ -78,6 +78,6 @@ export const cutPoint = {
 }
 
 export const empty = {
-    type: "FeatreCollection",
+    type: "FeatureCollection",
     features: []
 }
