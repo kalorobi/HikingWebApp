@@ -13,23 +13,29 @@ const log = logger.scope("HikingRoute");
 export default function HikingRoute(){
     const [selectedFeatureId, setSelectedFeatureId] = useState(null);
     const [selectedWaysView, setSelectedWaysView] = useState(null);
+
     
-    const { geojson, loading, setVisited, syncToSupabase, pendingEditsCount } = useGeojson();
+    const { geojson, loading, setVisited, cutWay, syncToSupabase, pendingEditsCount } = useGeojson();
     const { selectedWays } = useSelectedWays(geojson, selectedFeatureId);
 
     function handleClick(featureId){
         //setVisited(feature.id, true);
         setSelectedFeatureId(featureId);
     }
-    const handleConfirmVisited = useCallback(() => {
-        
+
+    // a térkép "cut-point" rétegén történő kattintásból érkezik: featureId = a vágandó way
+    // valódi (OSM eredetű) feature.id-je, pointIndex = a way koordináta-tömbjének indexe,
+    // ahol a vágás történjen
+    const handleCutPoint = useCallback((featureId, pointIndex) => {
+        cutWay(featureId, pointIndex);
+        log.debug('cutWay', { featureId, pointIndex });
+    }, [cutWay]);
+
+    const handleConfirmVisited = useCallback((date) => {
         if (!selectedWaysView?.features?.length) return;
 
-        const featureIds = selectedWaysView.features.map((f) => f.id);
-        const today = "2025-10-28"//new Date().toISOString().slice(0, 10);
-
-        setVisited(featureIds, true, today);
-        log.debug('setVisited');
+        const featureIds = selectedWaysView.features.map(f => f.id);
+        setVisited(featureIds, true, date);
 
     }, [selectedWaysView, setVisited]);
 
@@ -44,19 +50,18 @@ export default function HikingRoute(){
                         geojson={geojson}
                         selectedWaysView={selectedWaysView}
                         onFeatureClick={(f) => handleClick(f)}
+                        onCutPoint={handleCutPoint}
                     />
                 </div>
                 <div className='viewBox'>
                     <div className='buttonBox'>
-                        <button onClick={handleConfirmVisited} disabled={!selectedWaysView?.features?.length}>
-                            ok
-                        </button>
+                        
                     </div>
                     <div className='tableBox'>
                     <HikingRouteTable 
                         selectedWays={selectedWays}
                         setSelectedWaysView={setSelectedWaysView}
-                        onSetVisited={setVisited}
+                        onSetVisited={handleConfirmVisited}
                     />
                     </div>
                 </div>
