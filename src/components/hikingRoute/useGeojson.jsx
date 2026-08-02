@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import db from '../../services/indexedDb/HikingRouteIndexedDb';
 import { downloadGeojson, uploadGeojson } from '../../services/supabase/HikingRouteSupabase';
-import { applyAllEdits, validateGeojsonAgainstEdits, isToday, injectIds } from './geojsonHelpers';
+import { applyAllEdits, validateGeojsonAgainstEdits, isToday, injectIds, stripInternalFields } from './geojsonHelpers';
 import Logger from '../../utils/Logger';
 
 const log = Logger.scope("useGeojson");
@@ -96,31 +96,69 @@ export function useGeojson() {
     [dispatchEdit]
   );
 
+  // egy way elvágása a megadott (belső) vertex-indexen. featureId a way valódi
+  // (OSM eredetű) feature.id-je - NEM a properties.uid (az csak a MapLibre kattintás-
+  // kezeléshez van injektálva) -, pointIndex a way geometry.coordinates tömbjének
+  // indexe, ahol a vágás történjen.
+  const cutWay = useCallback(
+    (featureId, pointIndex) => dispatchEdit('CUT_WAY', featureId, { pointIndex }),
+    [dispatchEdit]
+  );
+
+  const syncingRef = useRef(false);
+
   // --- 3. lépés: feltöltés Supabase-be ---
   const syncToSupabase = useCallback(async () => {
     if (!baseGeojson) throw new Error('Nincs betöltött geojson.');
 
-    const finalGeojson = applyAllEdits(baseGeojson, edits);
-
-    // ellenőrzés: minden módosítás tényleg benne van-e
-    const { valid, problems } = validateGeojsonAgainstEdits(finalGeojson, edits);
-    if (!valid) {
-      log.error('Validációs hiba feltöltés előtt:', problems);
-      throw new Error('A geojson nem tartalmazza az összes módosítást: ' + problems.join(', '));
+    // egyidejű/dupla hívás elleni védelem (pl. gomb dupla kattintás lassú hálózaton) -
+    // enélkül két párhuzamos sync ugyanazt a friss state-et olvasná, és a második írás
+    // feleslegesen felülírná/megismételné az elsőt
+    if (syncingRef.current) {
+      log.debug('sync mar folyamatban, kihagyva');
+      return;
     }
+    syncingRef.current = true;
 
-    await uploadGeojson(finalGeojson);
+    try {
+      // FONTOS: NEM a helyi (esetleg reggel óta cache-elt) baseGeojson-ra építünk, hanem
+      // frissen letöltjük a szerver AKTUÁLIS állapotát. Enélkül, ha időközben más felhasználó
+      // is feltöltött, az ő munkája csendben felülíródna a mi feltöltésünkkel (a Storage-alapú
+      // "egész fájlt felülírjuk" mechanizmus miatt nincs automatikus merge a szerver oldalán).
+      log.debug('fresh base download sync elott');
+      const rawFreshBase = await downloadGeojson();
+      const freshBase = injectIds(rawFreshBase); // uid/originalId újraszámolása a friss állapotra
 
-    // sikeres feltöltés után: log ürítése, base frissítése a mai dátummal
-    await db.editLog.clear();
-    await db.geojsonStore.put({
-      id: 'main',
-      data: finalGeojson,
-      downloaded_at: new Date().toISOString()
-    });
+      const finalGeojson = applyAllEdits(freshBase, edits);
 
-    setBaseGeojson(finalGeojson);
-    setEdits([]);
+      // ellenőrzés: minden módosítás tényleg benne van-e
+      const { valid, problems } = validateGeojsonAgainstEdits(finalGeojson, edits);
+      if (!valid) {
+        log.error('Validációs hiba feltöltés előtt:', problems);
+        throw new Error('A geojson nem tartalmazza az összes módosítást: ' + problems.join(', '));
+      }
+
+      await uploadGeojson(stripInternalFields(finalGeojson));
+
+      // FONTOS: NEM db.editLog.clear() - az az ÖSSZES rekordot törölné, beleértve azokat is,
+      // amik esetleg a fenti (aszinkron) letöltés/feltöltés KÖZBEN keletkeztek (ha a felhasználó
+      // tovább szerkesztett, amíg a sync folyt). Csak azokat a rekordokat töröljük, amiket
+      // EBBEN a szinkronban ténylegesen feltöltöttünk (edits, a hívás pillanatában befagyasztva).
+      const syncedLocalIds = edits.map((e) => e.localId).filter((id) => id !== undefined);
+      await db.editLog.bulkDelete(syncedLocalIds);
+
+      await db.geojsonStore.put({
+        id: 'main',
+        data: finalGeojson,
+        downloaded_at: new Date().toISOString()
+      });
+
+      setBaseGeojson(finalGeojson);
+      // csak a most feltöltötteket vesszük ki a state-ből, a közben hozzáadott újakat nem
+      setEdits((prev) => prev.filter((e) => !syncedLocalIds.includes(e.localId)));
+    } finally {
+      syncingRef.current = false;
+    }
   }, [baseGeojson, edits]);
 
   // --- kényszerített újratöltés (pl. pull-to-refresh) ---
@@ -128,7 +166,8 @@ export function useGeojson() {
     log.debug('forcee refresh');
     setLoading(true);
     try {
-      const geojson = await downloadGeojson();
+      let geojson = await downloadGeojson();
+      geojson = injectIds(geojson); // uid/originalId hiányzott innen, a térkép enélkül eltört volna
       await db.geojsonStore.put({
         id: 'main',
         data: geojson,
@@ -149,6 +188,7 @@ export function useGeojson() {
     error,
     pendingEditsCount: edits.length,
     setVisited,
+    cutWay,
     syncToSupabase,
     forceRefresh
   };

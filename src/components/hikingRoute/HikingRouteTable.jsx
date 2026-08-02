@@ -4,9 +4,10 @@ import logger from '../../utils/Logger';
 
 const log = logger.scope('HikingRouteTable');
 
-export function HikingRouteTable({ selectedWays, setSelectedWaysView, onSetVisited, onSetVisitedDatas }) {
+export function HikingRouteTable({ selectedWays, setSelectedWaysView, onSetVisited }) {
 
   const [viewIds, setViewIds] = useState(new Set());
+  const [selectedDate, setSelectedDate] = useState("2026-08-02");
 
   // Ha új a selectedWays (pl. más útvonalat választottunk), 
   // állítsuk vissza az alapértelmezett (nem látogatott) szettre
@@ -14,14 +15,14 @@ export function HikingRouteTable({ selectedWays, setSelectedWaysView, onSetVisit
     const initial = new Set(
       selectedWays.features
         .filter(f => f.properties.visited === false)
-        .map(f => f.properties.uid)
+        .map(f => f.id)
     );
     setViewIds(initial);
   }, [selectedWays]);
 
   // A viewIds alapján állítjuk elő a selectedWaysView-t
   useEffect(() => {
-    const filtered = selectedWays.features.filter(f => viewIds.has(f.properties.uid));
+    const filtered = selectedWays.features.filter(f => viewIds.has(f.id));
 
     setSelectedWaysView(filtered.length > 0
       ? { ...selectedWays, features: filtered }
@@ -30,7 +31,7 @@ export function HikingRouteTable({ selectedWays, setSelectedWaysView, onSetVisit
   }, [selectedWays, viewIds, setSelectedWaysView]);
 
   function handleRowClick(feature) {
-    const uid = feature.properties.uid;
+    const id = feature.id;
     log.debug('click: ', feature.id);
     log.debug('relations', feature.properties.relations)
 
@@ -38,10 +39,10 @@ export function HikingRouteTable({ selectedWays, setSelectedWaysView, onSetVisit
 
     setViewIds(prev => {
       const next = new Set(prev);
-      if (next.has(uid)) {
-        next.delete(uid);
+      if (next.has(id)) {
+        next.delete(id);
       } else {
-        next.add(uid);
+        next.add(id);
       }
       return next;
     });
@@ -61,7 +62,7 @@ export function HikingRouteTable({ selectedWays, setSelectedWaysView, onSetVisit
           {selectedWays.features.map((f, i) => (
             <MapTableRow
               key={f.id}
-              isInView={viewIds.has(f.properties.uid)}
+              isInView={viewIds.has(f.id)}
               index={i}
               feature={f}
               visited={f.properties.visited}
@@ -70,6 +71,23 @@ export function HikingRouteTable({ selectedWays, setSelectedWaysView, onSetVisit
           ))}
         </tbody>
       </table>
+
+      <div style={{ marginTop: "12px", display: "flex", gap: "8px", alignItems: "center" }}>
+        <label htmlFor="dateSelect">Dátum:</label>
+        <input
+          className='dateInput'
+          id="dateSelect"
+          type="date"
+          value={selectedDate}
+          onChange={(e) => setSelectedDate(e.target.value)}
+        />
+        <button onClick={() => onSetVisited(selectedDate)}>
+          OK
+        </button>
+      </div>
+
+
+
     </div>
   );
 }

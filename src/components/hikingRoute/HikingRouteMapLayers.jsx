@@ -1,6 +1,6 @@
 export const baseMap = {
     dragRotate: false,
-    interactiveLayerIds: ['way-hitbox'],
+    interactiveLayerIds: ['way-hitbox', 'cut-point'],
     initialViewState: { longitude: 19.826587, latitude: 47.9263058, zoom: 12 },
     style: { width: '100%', height: '100%' },
     mapStyle: "https://tiles.openfreemap.org/styles/bright"
@@ -72,8 +72,15 @@ export const cut = {
 export const cutPoint = {
     minzoom: 13,
     paint: {
-        'circle-radius': 4, 
-        'circle-color': '#3A8D60'
+        'circle-radius': [
+            'case',
+            ['boolean', ['feature-state', 'hover'], false],
+            8,
+            5
+        ],
+        'circle-color': '#3A8D60',
+        'circle-stroke-width': 2,
+        'circle-stroke-color': '#ffffff'
     }
 }
 

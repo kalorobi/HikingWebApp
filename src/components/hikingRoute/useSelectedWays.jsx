@@ -7,18 +7,19 @@ export function useSelectedWays(geojson, selectedFeatureId) {
             return { type: "FeatureCollection", features: [] };
         }
 
+        // selectedFeatureId a valódi (OSM eredetű) feature.id, NEM a properties.uid
+        // (utóbbi csak a MapLibre kattintáskezeléshez van injektálva)
         const selectedFeature = geojson.features.filter(
-            f => f.properties.uid === selectedFeatureId
+            f => f.id === selectedFeatureId
         );
-        let selected = selectedFeature;
-        if(selectedFeature.length > 0){
 
-            selected = findWays(geojson, selectedFeature[0]);
-
+        if (selectedFeature.length === 0) {
+            // nincs egyező feature (pl. törölt/vágott way stale id-vel) - érvényes,
+            // üres FeatureCollection-t adunk vissza, NEM a csupasz filter-tömböt
+            return { type: "FeatureCollection", features: [] };
         }
 
-
-        return selected;
+        return findWays(geojson, selectedFeature[0]);
     }, [geojson, selectedFeatureId]);
 
     return { selectedWays };
