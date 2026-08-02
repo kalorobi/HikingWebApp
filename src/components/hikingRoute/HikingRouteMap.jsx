@@ -65,7 +65,7 @@ export default function HikingRouteMap({ geojson, selectedWaysView, onFeatureCli
     const clickedFeature = geojson?.features?.find(f => f.properties.uid === clickedUid);
     if (!clickedFeature) return;
 
-    setCutPreview(prew => ({ ...prew, features: [] }));
+    setCutPreview(prev => ({ ...prev, features: [] }));
     onFeatureClick(clickedFeature.id);
   }
 
@@ -73,11 +73,14 @@ export default function HikingRouteMap({ geojson, selectedWaysView, onFeatureCli
   function rightClickFeature(e) {
     if (e.features.length === 0) return;
     const featureId = e.features?.[0].id;
+    if (!featureId) return;
 
-    if (featureId) {
-      const feature = geojson?.features?.filter(f => f.properties.uid === featureId);
-      setCutPreview(prew => ({ ...prew, features: [feature][0] }));
-    }
+    // a uid egyedi, ezért .find-ot használunk (nem .filter-t) - egyetlen
+    // feature-t adunk vissza, nem egy egyelemű tömböt becsomagolva
+    const feature = geojson?.features?.find(f => f.properties.uid === featureId);
+    if (!feature) return;
+
+    setCutPreview(prev => ({ ...prev, features: [feature] }));
   }
 
   // hover kezelése a vágópontokon (feature-state alapú, nincs re-render minden mozdulatnál)

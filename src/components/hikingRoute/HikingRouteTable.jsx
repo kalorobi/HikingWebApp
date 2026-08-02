@@ -7,7 +7,7 @@ const log = logger.scope('HikingRouteTable');
 export function HikingRouteTable({ selectedWays, setSelectedWaysView, onSetVisited }) {
 
   const [viewIds, setViewIds] = useState(new Set());
-  const [selectedDate, setSelectedDate] = useState("2026-08-02");
+  const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().slice(0, 10));
 
   // Ha új a selectedWays (pl. más útvonalat választottunk), 
   // állítsuk vissza az alapértelmezett (nem látogatott) szettre
