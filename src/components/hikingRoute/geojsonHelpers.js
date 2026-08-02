@@ -155,42 +155,81 @@ export function validateGeojsonAgainstEdits(geojson, edits) {
     byFeatureEdits.get(edit.featureId).push(edit);
   }
 
+  // featureId -> [firstHalfId, secondHalfId], a CUT_WAY edit-ek alapján.
+  // ez kell ahhoz, hogy egy időközben elvágott feature-t a leszármazottjain
+  // (akár többszörös, egymást követő vágás esetén a leszármazottak
+  // leszármazottjain) tudjunk ellenőrizni, ahelyett hogy hibásan
+  // "hiányzó feature"-t jeleznénk egy SET_VISITED utáni CUT_WAY miatt.
+  const cutSuccessors = new Map();
+  for (const edit of edits) {
+    if (edit.type !== 'CUT_WAY') continue;
+    cutSuccessors.set(edit.featureId, [`${edit.featureId}_a`, `${edit.featureId}_b`]);
+  }
+
+  // egy featureId-ból eljut az összes ténylegesen létező "levél" feature-ig:
+  // ha a feature nincs elvágva, ő maga a levél; ha el van vágva, a két fele
+  // (rekurzívan, ha azok is el lettek vágva később egy soron következő edit által).
+  function resolveLeafIds(featureId, seen = new Set()) {
+    if (seen.has(featureId)) return []; // védelem esetleges hibás/ciklikus edit-log ellen
+    seen.add(featureId);
+
+    if (byFeature.has(featureId)) return [featureId];
+
+    const successors = cutSuccessors.get(featureId);
+    if (!successors) return []; // ténylegesen hiányzik, erre nincs magyarázat
+
+    return successors.flatMap((id) => resolveLeafIds(id, seen));
+  }
+
   for (const [featureId, featureEdits] of byFeatureEdits) {
-    const feature = byFeature.get(featureId);
-    if (!feature) {
-      // ha a feature időközben el lett vágva (CUT_WAY), az eredeti uid már nem létezik -
-      // ez elvárt állapot, ha a vágás a SET_VISITED edit UTÁN történt a logban.
+    const leafIds = resolveLeafIds(featureId);
+
+    if (leafIds.length === 0) {
+      // sem maga a feature, sem egy vágás utáni leszármazottja nem található -
+      // ez tényleges hiba (pl. törölt adat vagy korrupt edit-log)
       problems.push(`Hiányzó feature: ${featureId}`);
       continue;
     }
 
-    // az utolsó edit adja a végleges 'visited' állapotot
+    // az utolsó edit adja a végleges 'visited' állapotot, amit MINDEN
+    // (esetlegesen vágás utáni) leszármazottnak örökölnie kellett a CUT_WAY-kor
     const lastEdit = featureEdits[featureEdits.length - 1];
-    if (feature.properties.visited !== lastEdit.payload.visited) {
-      problems.push(`Eltérés visited mezőben: ${featureId}`);
-    }
-
-    // minden edit dátumának szerepelnie kell a visitedDates tömbben
     const expectedDates = [...new Set(featureEdits.map((e) => e.payload.date).filter(Boolean))];
-    const actualDates = feature.properties.visitedDates ?? [];
-    const missing = expectedDates.filter((d) => !actualDates.includes(d));
-    if (missing.length > 0) {
-      problems.push(`Hiányzó dátum(ok) a visitedDates mezőben: ${featureId} (${missing.join(', ')})`);
+
+    for (const leafId of leafIds) {
+      const feature = byFeature.get(leafId);
+
+      if (feature.properties.visited !== lastEdit.payload.visited) {
+        problems.push(`Eltérés visited mezőben: ${leafId}${leafId !== featureId ? ` (eredeti: ${featureId})` : ''}`);
+      }
+
+      const actualDates = feature.properties.visitedDates ?? [];
+      const missing = expectedDates.filter((d) => !actualDates.includes(d));
+      if (missing.length > 0) {
+        problems.push(
+          `Hiányzó dátum(ok) a visitedDates mezőben: ${leafId}${leafId !== featureId ? ` (eredeti: ${featureId})` : ''} (${missing.join(', ')})`
+        );
+      }
     }
   }
 
   // CUT_WAY edit-ek ellenőrzése: minden vágásnak ténylegesen le kellett futnia,
-  // azaz az eredeti id-nak el kell tűnnie, a két új "_a"/"_b" id-nak létre kell jönnie.
+  // azaz az eredeti id-nak el kell tűnnie, és a két új "_a"/"_b" félnek (VAGY,
+  // ha azokat egy KÉSŐBBI edit tovább vágta, azok leszármazottjainak) létre kell jönniük.
+  // a resolveLeafIds-t használjuk itt is, mert egy fél maga is elvágható egy soron
+  // következő CUT_WAY edittel - ilyenkor "${id}_a" közvetlenül már nem létezik, csak a
+  // leszármazottjai (pl. "${id}_a_a"/"${id}_a_b"), ami nem jelenti azt, hogy az EREDETI
+  // vágás sikertelen volt.
   // ha ez nem így van (pl. érvénytelen pointIndex miatt csendben no-op volt az applyEdit),
   // azt itt buktatjuk el feltöltés előtt, ne szinkronizáljunk hamis állapotot.
   for (const edit of edits) {
     if (edit.type !== 'CUT_WAY') continue;
 
     const stillExists = byFeature.has(edit.featureId);
-    const firstHalf = byFeature.has(`${edit.featureId}_a`);
-    const secondHalf = byFeature.has(`${edit.featureId}_b`);
+    const firstHalfLeaves = resolveLeafIds(`${edit.featureId}_a`);
+    const secondHalfLeaves = resolveLeafIds(`${edit.featureId}_b`);
 
-    if (stillExists || !firstHalf || !secondHalf) {
+    if (stillExists || firstHalfLeaves.length === 0 || secondHalfLeaves.length === 0) {
       problems.push(
         `Sikertelen vágás: ${edit.featureId} (pointIndex: ${edit.payload?.pointIndex}) - ` +
         `ellenőrizd, hogy a vágási pont belső vertex volt-e, és a way még létezett-e a vágáskor.`

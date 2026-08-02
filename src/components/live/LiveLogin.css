@@ -15,6 +15,7 @@
     justify-content: center; 
     align-items: center 
 }
-.error{
-    color: var(--color-warning)
+.loginError{
+    color: var(--color-warning);
+    font-size: var(--text-md);
 }
