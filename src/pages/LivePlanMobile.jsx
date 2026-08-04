@@ -2,13 +2,15 @@ import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from 'react-router-dom';
 import MountainCard from "../components/livePlan/LivePlanMountainCard";
 import { useLivePlanMountains } from "../services/query/useLivPlanMountains";
+import { useCurrentLiveUserId } from "../services/query/useCurrentLiveUserId";
 import './LivePlanMobile.css'
 import LivePlanLoading from "../components/livePlan/LivePlanLoading";
 
 export default function LivePlanMobile(){
   const navigate = useNavigate();
 
-  const { data: mountains = [], isLoading, isSuccess } = useLivePlanMountains(2);
+  const { data: liveUserId, isLoading: isUserLoading } = useCurrentLiveUserId();
+  const { data: mountains = [], isLoading, isSuccess } = useLivePlanMountains(liveUserId);
 
   function handleCardClick(data, filter ='') {
     if(filter !==''){
@@ -33,7 +35,15 @@ export default function LivePlanMobile(){
   );
 }, [isSuccess, mountains]);
 
-  if(isLoading) return (<LivePlanLoading />);
+  if(isUserLoading || isLoading) return (<LivePlanLoading />);
+
+  if(!liveUserId) {
+    return (
+      <div className="mountain-box">
+        <p>A fiókod még nincs összekötve túrázó-profillal. Kérj adminisztrátori beállítást.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="mountain-box">

@@ -6,13 +6,14 @@ import 'react-tooltip/dist/react-tooltip.css';
 import { Mountains } from './LIvePlanMountains';
 import { centerOfMass } from '@turf/center-of-mass';
 import { destination } from "@turf/destination";
+import { bbox } from "@turf/bbox";
 import { point } from '@turf/helpers';
 import MapMarker from './MapMarker';
 import logger from '../../utils/Logger';
 
 const log = logger.scope('LivePlanMap');
 
-export default function LivePlanMap({plans, setSelectedPlan}){
+export default function LivePlanMap({plans, selectedPlan}){
 
     const mapRef = useRef(null);
     const mapPlans = useRef(null);
@@ -44,7 +45,28 @@ export default function LivePlanMap({plans, setSelectedPlan}){
         })
 
         setCoordinates(tempCoord);
-    },[plans])
+    },[plans]);
+
+    useEffect(() => {
+        if (
+            !selectedPlan?.geojson || 
+            !mapRef.current ||
+            selectedPlan.geojson.features.length === 0
+        ) 
+            return;
+
+        const map = mapRef.current.getMap();
+
+        try {
+            const [minLng, minLat, maxLng, maxLat] = bbox(selectedPlan.geojson);
+
+            map.fitBounds([[minLng, minLat],[maxLng, maxLat],],
+                {padding: 50,duration: 800,maxZoom: 16,}
+            );
+        } catch (err) {
+            log.error("Cannot fit selected plan", err);
+        }
+    }, [selectedPlan]);
 
     return (
        <MapView
@@ -74,7 +96,11 @@ export default function LivePlanMap({plans, setSelectedPlan}){
                         setSelectedPlan(plan);
                     }}
                 >
-                    <MapMarker id={plan.id} text={plan.plan_name} />
+                    <MapMarker 
+                        id={plan.id} 
+                        text={plan.plan_name}
+                        color={plan.id === selectedPlan?.id ? '#5B8FA8' : '#6f4e37'} 
+                    />
                 </Marker>
 
                 {/* GeoJSON réteg */}
@@ -84,8 +110,8 @@ export default function LivePlanMap({plans, setSelectedPlan}){
                             id={`geojson-line-${plan.id}`}
                             type="line"
                             paint={{
-                                'line-color':  plan.is_active? '#7A9E6F': '#D4813A',
-                                'line-width': 3
+                                'line-color':  plan.is_active? '#7A9E6F': plan.id === selectedPlan?.id ? '#5B8FA8' :'#D4813A',
+                                'line-width': plan.id === selectedPlan?.id ? 5 : 3
                             }}
                             filter={["==", "$type", "LineString"]}
                         />
