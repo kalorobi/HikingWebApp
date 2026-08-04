@@ -104,6 +104,11 @@ const icons = {
         <path d="m2 2 20 20"/>
         </>
     ),
+    logout: (
+        <><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/>
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+        </>
+    ),
     back: (<><path d="m15 18-6-6 6-6"/></>),
     default: (<><path d="M18 6 6 18"/><path d="m6 6 12 12"/></>)
 

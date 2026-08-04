@@ -1,8 +1,11 @@
-.td_active {
+.plan_table {
+    table-layout: auto;
+}
+.plan_td_active {
     background-color: var(--color-moss);
 }
 
-.expanded_row td {
+.plan_expanded_row td {
     white-space: normal; /* itt engedjük a sortörést */
     word-wrap: break-word;
 }

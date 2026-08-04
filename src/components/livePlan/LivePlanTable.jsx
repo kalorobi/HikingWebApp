@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import styles from './LivePlanTable.module.css'
+import './LivePlanTable.css'
 
 function AddRow({ plan, isExpanded, onRowClick }) {
     return (
@@ -7,13 +7,13 @@ function AddRow({ plan, isExpanded, onRowClick }) {
             <tr onClick={() => onRowClick(plan)}>
                 <td>{plan.id}</td><td>{plan.plan_name}</td><td>{plan.mountain}</td>
                 <td>{plan.distance}km</td>
-                <td className={plan.is_ready?styles.td_active:''}>{plan.is_ready? 'x' : '-'}</td>
-                <td className={plan.is_active?styles.td_active:''}>{plan.is_active? 'x' : '-'}</td>
+                <td className={plan.is_ready ? 'plan_td_active' :''}>{plan.is_ready? 'x' : '-'}</td>
+                <td className={plan.is_active ? 'plan_td_active' :''}>{plan.is_active? 'x' : '-'}</td>
             </tr>
             {isExpanded && (
-                <tr className={styles.expanded_row}>
-                    <td colSpan={5}>
-                        <div className="plan-details">
+                <tr className='plan_expanded_row'>
+                    <td colSpan={6}>
+                        <div className='plan-details'>
                             <p><strong>Leírás:</strong> {plan.description}</p>
                             <p><strong>link:</strong> {plan.link}</p>
                             {/* stb. */}
@@ -25,17 +25,18 @@ function AddRow({ plan, isExpanded, onRowClick }) {
     );
 }
 
-export default function LivePlanTable({planedRoutes}) {
+export default function LivePlanTable({planedRoutes, setSelectedPlan}) {
     const [expandedId, setExpandedId] = useState(null);
 
     if(!planedRoutes) return null;
 
     function handleRowClick(plan) {
         setExpandedId(prevId => prevId === plan.id ? null : plan.id);
+        setSelectedPlan(plan);
     }
 
     return (
-        <table className='planTable'>
+        <table className='plan_table'>
             <thead>
             <tr>
                 <th>id</th><th>Név</th><th>hegy</th><th>km</th><th>R</th><th>A</th>

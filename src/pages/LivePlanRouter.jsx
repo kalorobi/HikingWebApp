@@ -13,15 +13,14 @@ export default function LivePlanRouter() {
 
     const { mountain, routeId } = useParams();
 
-    // Csak a sima LivePlan marad provider nélkül
-    if (!isMobile) {
-        return <LivePlan />;
-    }
-
-    // Minden más React Query-t használ
+    // Mind a desktop, mind a mobil ág React Query-t használ (pl. a bejelentkezett
+    // userhez tartozó live_users.user_id lekéréséhez), ezért a providert az
+    // egész router fölé emeljük, nem csak a mobil ágra.
     return (
         <LivePlanQueryProvider>
-            {routeId ? (
+            {!isMobile ? (
+                <LivePlan />
+            ) : routeId ? (
                 <LivePlanRoute />
             ) : mountain ? (
                 <LivePlanMountain />
@@ -31,18 +30,3 @@ export default function LivePlanRouter() {
         </LivePlanQueryProvider>
     );
 }
-
-/*
-export default function LivePlanRouter() {
-    const isMobile =
-        navigator.userAgentData?.mobile ??
-        /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent);
-
-    const { mountain, routeId } = useParams(); 
-
-    if (routeId) return <LivePlanRoute />;
-    if (mountain) return <LivePlanMountain />;
-    if (isMobile) return <LivePlanMobile />;
-    return <LivePlan />;
-}
-*/
