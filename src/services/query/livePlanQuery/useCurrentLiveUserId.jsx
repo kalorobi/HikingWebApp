@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "../SupabaseClient";
-import { useAuth } from "../auth/AuthContext";
+import { supabase } from "../../SupabaseClient";
+import { useAuth } from "../../auth/AuthContext";
 
 // A bejelentkezett Supabase Auth felhasználóhoz (UUID) tartozó live_users
 // numerikus user_id-ját kéri le a 'current_live_user_id' RPC-n keresztül.

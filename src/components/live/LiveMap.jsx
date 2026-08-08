@@ -9,6 +9,7 @@ import { Icon } from '../../assets/ikons/MapIcons';
 import LiveView from '../live/LiveView';
 import bbox from '@turf/bbox';
 import logger from '../../utils/Logger';
+import LiveMapLegend from './LiveMapLegend';
 
 const log = logger.scope("LiveMap");
 
@@ -123,7 +124,7 @@ export default function LiveMap({geojson, refress, auth}) {
         'text-field': ['get', 'name'],
         'text-size': {
           base: 1,
-          stops: [[13, 10], [16, 10], [20, 22]]
+          stops: [[13, 12], [16, 14], [20, 22]]
         },
         'text-anchor': 'bottom',
         'text-offset': [0, -0.8],
@@ -198,6 +199,9 @@ export default function LiveMap({geojson, refress, auth}) {
       </Marker>
     )}
     </Map>
+
+    <LiveMapLegend />
+
      <div style={{position: 'absolute', right: 16, top: 16, display: 'flex',flexDirection: 'column',
         gap: 8, zIndex: 10}}>
         <button style={{ padding: 0, lineHeight: 0 }} onClick={toCeneter}>

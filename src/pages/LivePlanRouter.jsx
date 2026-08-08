@@ -3,7 +3,7 @@ import LivePlanMobile from "./LivePlanMobile";
 import LivePlanMountain from './LivePlanMountain';
 import LivePlanRoute from './LivePlanRoute';
 import { useParams } from 'react-router-dom';
-import LivePlanQueryProvider from '../services/query/LivePlanQueryProvider';
+import LivePlanQueryProvider from '../services/query/livePlanQuery/LivePlanQueryProvider';
 
 
 export default function LivePlanRouter() {

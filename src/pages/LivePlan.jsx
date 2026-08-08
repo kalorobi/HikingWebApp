@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState} from 'react';
 import { useNavigate } from 'react-router-dom';
 import './LivePlan.css'
-import { AllRoutes } from '../services/supabase/LivePlanSupabase';
+import { fetchAllPlannedRoutes } from '../services/supabase/fetchAllPlannedRoutes';
 import LivePlanTable from '../components/livePlan/LivePlanTable';
 import LivePlanMap from '../components/livePlan/LivePlanMap';
 import LivePlanViewer from '../components/livePlan/LivePlanViewer';
-import { useCurrentLiveUserId } from '../services/query/useCurrentLiveUserId';
+import { useCurrentLiveUserId } from '../services/query/livePlanQuery/useCurrentLiveUserId';
 import { useAuth } from '../services/auth/AuthContext';
 import { Icon } from '../assets/ikons/MapIcons';
 import logger from '../utils/Logger';
@@ -25,7 +25,7 @@ export default function LivePlan(){
         if (isUserLoading || !liveUserId) return;
 
         async function load() {
-            const temp = await AllRoutes(liveUserId);
+            const temp = await fetchAllPlannedRoutes(liveUserId);
             if(temp) setPlans(temp);
         }
         load();

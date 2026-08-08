@@ -2,7 +2,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import LiveMap from '../components/live/LiveMap';
 import LiveLogin from '../components/live/LiveLogin'
-import { useLiveCoordinates } from '../services/supabase/LiveSupabase';
+//import { useLiveCoordinates } from '../services/supabase/LiveSupabase';
+import { useLiveCoordinates } from '../components/live/useLiveCoordinates';
 import { Icon } from '../assets/ikons/MapIcons';
 import LiveFooter from '../components/live/LiveFooter'
 import './Live.css';
@@ -26,7 +27,7 @@ export default function Live(){
     const { geojson, refetchMissingPoints, isRefetching } = useLiveCoordinates(auth.user_id);
 
     useEffect(() => {
-        if(geojson.features.length > 0) log.info("Geojson is ready");
+        //if(geojson.features.length > 0) log.info("Geojson is ready");
     },[geojson]);
 
     return (

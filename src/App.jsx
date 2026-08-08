@@ -12,6 +12,8 @@ import { NotFound } from './pages/NotFound';
 import './base.css';
 import VisitorsLog from './services/VisitorsLog';
 import LivePlanRouter from './pages/LivePlanRouter';
+import LivePlanQueryProvider from './services/query/livePlanQuery/LivePlanQueryProvider';
+import LiveQueryProvider from './services/query/liveQuery/LiveQueryProvider';
 
 function App() {
   return (
@@ -20,8 +22,14 @@ function App() {
         {import.meta.env.PROD && <VisitorsLog />}
 
         <Routes>
-          <Route path="/live" element={<Live />} />
-          <Route path="/live/:user" element={<Live />} />
+          <Route 
+            path="/live/:user?" 
+            element={
+              <LiveQueryProvider>
+                <Live />
+              </LiveQueryProvider>
+            }
+          />
           <Route path="/hikingRoute" element={<HikingRoute />} />
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
