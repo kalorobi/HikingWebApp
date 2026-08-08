@@ -1,8 +1,8 @@
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from 'react-router-dom';
 import MountainCard from "../components/livePlan/LivePlanMountainCard";
-import { useLivePlanMountains } from "../services/query/useLivPlanMountains";
-import { useCurrentLiveUserId } from "../services/query/useCurrentLiveUserId";
+import { useLivePlanMountains } from "../services/query/livePlanQuery/useLivPlanMountains";
+import { useCurrentLiveUserId } from "../services/query/livePlanQuery/useCurrentLiveUserId";
 import './LivePlanMobile.css'
 import LivePlanLoading from "../components/livePlan/LivePlanLoading";
 

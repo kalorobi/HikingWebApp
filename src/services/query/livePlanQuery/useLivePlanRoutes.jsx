@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '../SupabaseClient';
+import { supabase } from '../../SupabaseClient';
 
 export function useLivePlanRoutes(mountain) {
   return useQuery({

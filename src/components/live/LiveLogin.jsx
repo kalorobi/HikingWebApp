@@ -15,6 +15,8 @@ function sessionCacheKey(user) {
 
 export default function LiveLogin({ auth, setAuth }) {
   const navigate = useNavigate();
+  const [userName, setUserName] = useState(auth.user ?? '');
+  const [password, setPassword] = useState(auth.key ?? '');
   const [error, setError] = useState(null);
   const [isChecking, setIsChecking] = useState(false);
 
@@ -33,6 +35,9 @@ export default function LiveLogin({ auth, setAuth }) {
       // a cache ne írja felül csendben az új próbálkozást
       if (parsed.key === keyVal) {
         setAuth(parsed);
+        if (shouldNavigate) {
+          navigate(`/live/${userVal}?key=${encodeURIComponent(keyVal)}`, { replace: true });
+        }
         return;
       }
     }
@@ -70,7 +75,8 @@ export default function LiveLogin({ auth, setAuth }) {
 
   function handleSubmit(e) {
     e.preventDefault();
-    attemptLogin(auth.user, auth.key, { shouldNavigate: true });
+    attemptLogin(userName, password, { shouldNavigate: true });
+    //attemptLogin(auth.user, auth.key, { shouldNavigate: true });
   }
 
   return (
@@ -81,16 +87,16 @@ export default function LiveLogin({ auth, setAuth }) {
         <input
           type="text"
           placeholder="Túrázó:"
-          value={auth.user ?? ''}
-          onChange={e => setAuth(prev => ({ ...prev, user: e.target.value }))}
+          value={userName}
+          onChange={e => setUserName(e.target.value)}
           className='input'
           autoComplete="username"
         />
         <input
           type="password"
           placeholder="Jelszó:"
-          value={auth.key ?? ''}
-          onChange={e => setAuth(prev => ({ ...prev, key: e.target.value }))}
+          value={password}
+          onChange={e => setPassword(e.target.value)}
           className='input'
           autoComplete="off"
         />

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { useLivePlanRoutes } from '../services/query/useLivePlanRoutes';
+import { useLivePlanRoutes } from '../services/query/livePlanQuery/useLivePlanRoutes';
 import { Icon } from '../assets/ikons/MapIcons';
 import './LivePlanRoute.css';
 import PlanCard from '../components/livePlan/LivePlanPlanCard';

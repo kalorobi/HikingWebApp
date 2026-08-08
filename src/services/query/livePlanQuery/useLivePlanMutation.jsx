@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '../SupabaseClient';
+import { supabase } from '../../SupabaseClient';
 
 // --- INSERT ---
 export function useInsertLivePlanRoute() {
