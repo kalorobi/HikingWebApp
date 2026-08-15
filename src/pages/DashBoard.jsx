@@ -9,7 +9,7 @@ import {
   LabelList,
 } from "recharts";
 import { supabase } from '../services/SupabaseClient';
-import "./DashBoard.css";
+import "./styles/DashBoard.css";
 
 function formatDateLabel(isoDate) {
   const d = new Date(isoDate);

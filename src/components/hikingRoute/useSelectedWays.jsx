@@ -1,26 +1,32 @@
 import { useMemo } from "react";
-import { findWays } from "./useSelectedWaysHelpers";
+import { findWays, findRelations } from "./useSelectedWaysHelpers";
 
 export function useSelectedWays(geojson, selectedFeatureId) {
     const selectedWays = useMemo(() => {
         if (!geojson || !selectedFeatureId) {
-            return { type: "FeatureCollection", features: [] };
-        }
+        return { type: "FeatureCollection", features: [] };
+    }
 
-        // selectedFeatureId a valódi (OSM eredetű) feature.id, NEM a properties.uid
-        // (utóbbi csak a MapLibre kattintáskezeléshez van injektálva)
-        const selectedFeature = geojson.features.filter(
-            f => f.id === selectedFeatureId
-        );
+    const selectedFeature = geojson.features.find(
+        f => f.id === selectedFeatureId
+    );
 
-        if (selectedFeature.length === 0) {
-            // nincs egyező feature (pl. törölt/vágott way stale id-vel) - érvényes,
-            // üres FeatureCollection-t adunk vissza, NEM a csupasz filter-tömböt
-            return { type: "FeatureCollection", features: [] };
-        }
+    if (!selectedFeature) {
+        // nincs egyező feature (pl. törölt/vágott way stale id-vel) - érvényes,
+        // üres FeatureCollection-t adunk vissza
+        return { type: "FeatureCollection", features: [] };
+    }
 
-        return findWays(geojson, selectedFeature[0]);
+    return findWays(geojson, selectedFeature);
     }, [geojson, selectedFeatureId]);
 
-    return { selectedWays };
+    const selectedRelations = useMemo(() => {
+    if (!geojson || !selectedFeatureId) {
+        return null;
+    }
+    const match = geojson.features.find(f => f.id === selectedFeatureId);
+    return findRelations(geojson, match);
+}, [geojson, selectedFeatureId]);
+
+    return { selectedWays, selectedRelations };
 }

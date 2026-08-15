@@ -11,12 +11,23 @@ export const wayHitbox = {
         'line-color': 'transparent',
         'line-width': 20,
     }
-} 
+}
+
+export const gpx = {
+    paint: { 
+        'line-color': '#B5603E', 
+        'line-width': 8, 'line-opacity': 0.4
+    },
+    layout: {
+        'line-join': 'round',
+        'line-cap': 'round',
+    }
+}
 
 export const hiking = {
     paint: { 
         'line-color': '#D4813A', 
-        'line-width': 2 
+        'line-width': 2, 'line-opacity': 0.8 
     },
     layout: {
         'line-join': 'round',
@@ -26,8 +37,8 @@ export const hiking = {
 
 export const visited = {
     paint: { 
-        'line-color': '#FDFF24', 
-        'line-width': 4, "line-opacity": 0.5 
+        'line-color': '#7A9E6F', 
+        'line-width': 4, 'line-opacity': 0.8 
     },
     layout: {
         'line-join': 'round',

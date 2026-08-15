@@ -1,0 +1,99 @@
+.hikingBox {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  width: 100%;
+  margin: 0;
+}
+
+header, footer {
+  height: 32px;
+  flex-shrink: 0;
+}
+
+.mainBox {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  min-height: 0;
+}
+
+.mapBox {
+  flex: 3;
+}
+
+.viewBox {
+  flex: 0 0 30%;
+  padding-left: 10px;
+  padding-right: 10px;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+
+  min-height: 0;      /* FONTOS */
+  overflow: hidden;
+}
+.buttonBox {
+  flex: 0 0 12%;
+  display: inline-flex;
+  padding: 5px;
+  gap: 10px;
+  align-items: center;
+
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-moss);
+}
+.tableBox {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+    /* hely a scrollbar mellett */
+  padding-right: 8px;
+
+  /* stabil helyet biztosít a scrollbar számára */
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-light) transparent;
+}
+
+/* Chrome / Edge */
+.tableBox::-webkit-scrollbar {
+  width: 7px;
+}
+
+.tableBox::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.tableBox::-webkit-scrollbar-thumb {
+  background-color: var(--color-light);
+  border-radius: 10px;
+}
+
+.tableBox::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-light);
+}
+
+@media (max-width: 768px) {
+  .mainBox {
+    flex-direction: column;
+  }
+
+  .mapBox {
+    flex: 2; /* 2/3 */
+  }
+
+  .viewBox {
+    flex: 0 0 33%;
+    padding-top: 10px;
+    overflow: auto;
+    display: flex;
+    flex-direction: row;
+  }
+  .buttonBox {
+    flex: 0 0 25%;
+  }
+  .tableBox {
+    flex: 1;
+  }
+}

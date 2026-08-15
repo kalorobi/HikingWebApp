@@ -1,24 +1,59 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import './HikingRoute.css';
-import HikingRouteMap from '../components/hikingRoute/HikingRouteMap';
-import { supabase } from '../services/SupabaseClient';
+import './styles/HikingRoute.css';
 import { useGeojson } from '../components/hikingRoute/useGeojson';
-import { HikingRouteTable } from '../components/hikingRoute/HikingRouteTable';
 import { useSelectedWays } from '../components/hikingRoute/useSelectedWays';
+import HikingRouteMap from '../components/hikingRoute/HikingRouteMap';
+import HikingRouteTable from '../components/hikingRoute/HikingRouteTable';
+import { gpxToGeoJSON } from '../utils/gpxToGeojson'
+import ConfirmDialog from '../components/common/ConfirmDialog';
 import logger from '../utils/Logger';
 import LoggerPanel from '../utils/LoggerPanel';
 
 const log = logger.scope("HikingRoute");
 
 export default function HikingRoute(){
+    //Térképen kijelölt szakasz
     const [selectedFeatureId, setSelectedFeatureId] = useState(null);
+    //Táblázatban kijelölt szakaszok
     const [selectedWaysView, setSelectedWaysView] = useState(null);
 
-    
-    const { geojson, loading, setVisited, cutWay, syncToSupabase, pendingEditsCount } = useGeojson();
-    const { selectedWays } = useSelectedWays(geojson, selectedFeatureId);
+    const [delConfirmed, setDelConfirmed] = useState(false);
 
-    function handleClick(featureId){
+    //Supabase storage-ből letöltött geojson
+    const { geojson, loading, setVisited, cutWay, syncToSupabase, pendingEditsCount, forceRefresh } = useGeojson();
+
+    const [ gpxGeojson, setGpxGeojson] = useState(null);
+
+    //Térképen kijelölt szakasz kibővítve a következő elágazásig!
+    const { selectedWays, selectedRelations } = useSelectedWays(geojson, selectedFeatureId);
+
+    const fileInputRef = useRef(null);
+
+    const handleGpxChange = async (event) => {
+        const file = event.target.files?.[0];
+
+        if (!file) return;
+
+        try {
+            const gpxText = await file.text();
+            const g = gpxToGeoJSON(gpxText);
+
+            setGpxGeojson(g);
+            
+        } catch (error) {
+            console.error('Hiba a GPX beolvasásakor:', error);
+        }
+    };
+
+    const handleClearGpx = () => {
+        setGpxGeojson(null);
+
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
+    };
+
+    const handleClick = (featureId) =>{
         //setVisited(feature.id, true);
         setSelectedFeatureId(featureId);
     }
@@ -48,18 +83,40 @@ export default function HikingRoute(){
                 <div className='mapBox'>
                     <HikingRouteMap 
                         geojson={geojson}
+                        gpxGeojson={gpxGeojson}
                         selectedWaysView={selectedWaysView}
-                        onFeatureClick={(f) => handleClick(f)}
+                        onFeatureClick={handleClick}
                         onCutPoint={handleCutPoint}
                     />
                 </div>
                 <div className='viewBox'>
                     <div className='buttonBox'>
-                        
+                        <button className='btn'
+                            onClick={() => setDelConfirmed(true)}>
+                                Clear Database
+                            </button>
+                    </div>
+                    <div className='buttonBox'>
+                        <button
+                            className='btn'
+                            onClick={() => fileInputRef.current?.click()}
+                        >Load GPX</button>
+                        <button
+                            className='btn'
+                            onClick={handleClearGpx}
+                        >Clear GPX</button>
+                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept=".gpx,application/gpx+xml"
+                            onChange={handleGpxChange}
+                            hidden
+                        />
                     </div>
                     <div className='tableBox'>
                     <HikingRouteTable 
                         selectedWays={selectedWays}
+                        selectedRelations={selectedRelations}
                         setSelectedWaysView={setSelectedWaysView}
                         onSetVisited={handleConfirmVisited}
                     />
@@ -69,6 +126,19 @@ export default function HikingRoute(){
             <div className='footer'> F O O T E R </div>
 
         </div>
+
+        <ConfirmDialog
+            open={delConfirmed}
+            title="Megerősítés"
+            text={
+                'Adatbáztist biztosan törlöd"'
+            }
+            onCancel={() => setDelConfirmed(false)}
+            onConfirm={() => {
+                forceRefresh();
+                setDelConfirmed(false);
+            }}
+        />
 
         <LoggerPanel />
         </>
