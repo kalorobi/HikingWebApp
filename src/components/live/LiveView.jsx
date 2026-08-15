@@ -68,7 +68,11 @@ export default function LiveView({auth}) {
     <>
     <span data-tooltip-id="viewer-tooltip">{viewers.length} néző</span>
 
-    <Tooltip id="viewer-tooltip" className="viewStat">
+    <Tooltip 
+      id="viewer-tooltip" 
+      className="viewStat" 
+      style={{ zIndex: 100 }}
+    >
       <div>
         {viewers.map((v) => (
         <div key={v.viewerId}>

@@ -4,7 +4,7 @@ import * as mapLayers from './HikingRouteMapLayers';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import bbox from '@turf/bbox';
 
-export default function HikingRouteMap({ geojson, selectedWaysView, onFeatureClick, onCutPoint }) {
+export default function HikingRouteMap({ geojson, gpxGeojson, selectedWaysView, onFeatureClick, onCutPoint }) {
 
   const mapRef = useRef(null);
   // cutPreview: csak a JOBB KLIKKEL kiválasztott way vizuális előnézete (a "vágóvonal" és a rajta
@@ -133,6 +133,9 @@ export default function HikingRouteMap({ geojson, selectedWaysView, onFeatureCli
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
       >
+        <Source id="gpx" type="geojson" data={gpxGeojson ?? { ...mapLayers.empty }}>
+          <Layer id="gpx-layer" type="line" {...mapLayers.gpx} />
+        </Source>
         <Source
           id="way-source" type="geojson"
           data={geojson} promoteId="uid"

@@ -1,3 +1,15 @@
+export function findRelations(geojson, feature){
+  if (!feature) return null;
+
+  const rels = feature.properties?.relations;
+  if (!rels) return null;
+
+  const relIds = new Set(rels); // O(1) lookup a includes() helyett
+
+  const relsFeatures = geojson.features.filter(f => relIds.has(f.id));
+
+  return relsFeatures;
+}
 export function findWays(geojson, feature) {
   const index = buildEndpointIndex(geojson);
 

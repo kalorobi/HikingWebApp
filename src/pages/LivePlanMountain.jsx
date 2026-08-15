@@ -3,8 +3,8 @@ import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import RouteCard from '../components/livePlan/LivePlanRouteCard';
 import { useLivePlanRoutes } from '../services/query/livePlanQuery/useLivePlanRoutes';
 import { useUpdateLivePlanRoute } from '../services/query/livePlanQuery/useLivePlanMutation';
-import './LivePlanMountain.css';
-import ConfirmDialog from '../components/general/ConfirmDialog';
+import './styles/LivePlanMountain.css';
+import ConfirmDialog from '../components/common/ConfirmDialog';
 import LivePlanLoading from '../components/livePlan/LivePlanLoading';
 import { Icon } from '../assets/ikons/MapIcons';
 

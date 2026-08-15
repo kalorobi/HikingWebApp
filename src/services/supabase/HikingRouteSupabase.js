@@ -1,4 +1,7 @@
 import { supabase } from "../SupabaseClient";
+import logger from "../../utils/Logger";
+
+const log = logger.scope("HikigRouteSupabase");
 
 const BUCKET = 'hikingRoute';
 const FILE_PATH = 'latest.geojson';
@@ -21,8 +24,12 @@ function buildSnapshotFileName(regionName = REGION_NAME, date = new Date()) {
 
 export async function downloadGeojson() {
   const { data, error } = await supabase.storage.from(BUCKET).download(FILE_PATH);
-  if (error) throw error;
+  if (error) { 
+    log.error("Download error", error);
+    throw error;
+  }
   const text = await data.text();
+  log.info("Geojson was downloaded");
   return JSON.parse(text);
 }
 
@@ -34,7 +41,10 @@ export async function uploadGeojson(geojson) {
   const { error: latestError } = await supabase.storage
     .from(BUCKET)
     .upload(FILE_PATH, blob, { upsert: true, contentType: 'application/json' });
-  if (latestError) throw latestError;
+  if (latestError) {
+    log.error("Upload latest error", latestError);
+    throw latestError;
+  }
 
   // 2) dátumozott pillanatkép mentése (pl. "20260803_Matra.geojson"), hogy a
   //    korábbi állapotok megmaradjanak visszakereshető/visszaállítható formában,
@@ -43,5 +53,8 @@ export async function uploadGeojson(geojson) {
   const { error: snapshotError } = await supabase.storage
     .from(BUCKET)
     .upload(snapshotFileName, blob, { upsert: true, contentType: 'application/json' });
-  if (snapshotError) throw snapshotError;
+  if (snapshotError) {
+    log.error("Upload {snapshotFileName} error", snapshotError);
+    throw snapshotError;
+  }
 }

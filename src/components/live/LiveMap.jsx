@@ -152,7 +152,16 @@ export default function LiveMap({geojson, refress, auth}) {
       <Layer id="live-points" type="circle"
         minzoom={13}
         filter={['has', 'mode']}
-        paint={{ 'circle-radius': 4, 'circle-color': '#3A8D60' }}
+        paint={{ 
+          'circle-radius': 4, 
+          'circle-color': [
+            'match',
+            ['get', 'mode'],
+            'hiking', '#3A8D60',
+            'car',    '#3D5A73',
+            '#3A8D60' // default
+          ] 
+        }}
       />
 
       <Layer id="live-labels" type="symbol"
@@ -168,7 +177,13 @@ export default function LiveMap({geojson, refress, auth}) {
         'text-offset': [0, -0.8],
         }}
         paint={{
-        'text-color': '#4A2E1F',
+        'text-color': [
+            'match',
+            ['get', 'mode'],
+            'hiking', '#4A2E1F',
+            'car',    '#3D5A73',
+            '#3A8D60' // default
+          ],
         'text-halo-color': '#fff',
         'text-halo-width': 1,
         }}

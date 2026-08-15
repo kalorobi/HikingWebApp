@@ -4,7 +4,7 @@ import logger from '../../utils/Logger';
 
 const log = logger.scope('HikingRouteTable');
 
-export function HikingRouteTable({ selectedWays, setSelectedWaysView, onSetVisited }) {
+export default function HikingRouteTable({ selectedWays, selectedRelations, setSelectedWaysView, onSetVisited }) {
 
   const [viewIds, setViewIds] = useState(new Set());
   const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().slice(0, 10));
@@ -32,10 +32,6 @@ export function HikingRouteTable({ selectedWays, setSelectedWaysView, onSetVisit
 
   function handleRowClick(feature) {
     const id = feature.id;
-    log.debug('click: ', feature.id);
-    log.debug('relations', feature.properties.relations)
-
-    //onSetVisited(feature.id, !feature.properties.visited);
 
     setViewIds(prev => {
       const next = new Set(prev);
@@ -50,6 +46,12 @@ export function HikingRouteTable({ selectedWays, setSelectedWaysView, onSetVisit
 
   return (
     <div>
+      <div>
+        {/* ide kell majd egy turistajel rajzoló */}
+        {selectedRelations?.map((rel, i) => (
+          <span key={rel.id ?? i}>{rel.properties?.jel ?? '-'} </span>
+        ))}
+      </div>
       <table>
         <thead>
           <tr>
@@ -81,7 +83,10 @@ export function HikingRouteTable({ selectedWays, setSelectedWaysView, onSetVisit
           value={selectedDate}
           onChange={(e) => setSelectedDate(e.target.value)}
         />
-        <button onClick={() => onSetVisited(selectedDate)}>
+        <button
+          className='btn'
+          onClick={() => onSetVisited(selectedDate)}
+        >
           OK
         </button>
       </div>

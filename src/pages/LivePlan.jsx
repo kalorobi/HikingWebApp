@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState} from 'react';
 import { useNavigate } from 'react-router-dom';
-import './LivePlan.css'
+import './styles/LivePlan.css'
 import { fetchAllPlannedRoutes } from '../services/supabase/fetchAllPlannedRoutes';
 import LivePlanTable from '../components/livePlan/LivePlanTable';
 import LivePlanMap from '../components/livePlan/LivePlanMap';

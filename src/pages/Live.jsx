@@ -2,11 +2,10 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import LiveMap from '../components/live/LiveMap';
 import LiveLogin from '../components/live/LiveLogin'
-//import { useLiveCoordinates } from '../services/supabase/LiveSupabase';
 import { useLiveCoordinates } from '../components/live/useLiveCoordinates';
 import { Icon } from '../assets/ikons/MapIcons';
 import LiveFooter from '../components/live/LiveFooter'
-import './Live.css';
+import './styles/Live.css';
 import logger from '../utils/Logger';
 import LoggerPanel from '../utils/LoggerPanel';
 
