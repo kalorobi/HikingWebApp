@@ -57,6 +57,7 @@ export default function HikingRouteTable({ selectedWays, selectedRelations, setS
           <tr>
             <th>#</th>
             <th>Név</th>
+            <th>Hossz:</th>
             <th>Dátumok</th>
           </tr>
         </thead>
@@ -108,6 +109,12 @@ function MapTableRow({ index, feature, isInView, visited, onRowClick }) {
     >
       <td className={visited ? 'row-visited' : ''}>{index}</td>
       <td>{properties.originalId ?? '-'}</td>
+      <td>
+{(properties.distance / 1000).toLocaleString("hu-HU", {
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 2,
+  })} km
+      </td>
       <td>
         <span className="visited-dates">
           {(properties.visitedDates ?? []).join('\n')}

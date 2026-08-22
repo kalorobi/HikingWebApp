@@ -15,15 +15,25 @@ export default function HikingRouteMap({ geojson, gpxGeojson, selectedWaysView, 
 
   useEffect(() => {
     if (!selectedWaysView || !selectedWaysView.features?.length || !mapRef.current) return;
+    toBbox(selectedWaysView);
+  }, [selectedWaysView]);
+  useEffect(() => {
+    if (!gpxGeojson || !gpxGeojson.features?.length || !mapRef.current) return;
+    toBbox(gpxGeojson);
+  },[gpxGeojson]);
 
-    const [minLng, minLat, maxLng, maxLat] = bbox(selectedWaysView);
+  function toBbox(geo){
+    if(!geo) return;
+
+    const [minLng, minLat, maxLng, maxLat] = bbox(geo);
+
+    if (minLng == null) return;
 
     mapRef.current.fitBounds(
       [[minLng, minLat], [maxLng, maxLat]],
       { padding: 40, duration: 1000, maxZoom: 16 }
     );
-  }, [selectedWaysView]);
-
+  }
   // a cutWay vonal csomópontjaiból pont-FeatureCollection, index alapú id-vel
   const cutWayPoints = useMemo(() => {
     const line = cutPreview?.features?.[0];
