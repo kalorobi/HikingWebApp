@@ -1,3 +1,5 @@
+import length from "@turf/length";
+import { lineString } from "@turf/helpers";
 // egy vágott feature id-jéből (pl. "way123_a_b") visszafejti az eredeti (OSM) alap-id-t
 // és a vágási "útvonalat" (melyik fél volt melyik lépésnél): { baseId: "way123", parts: ["1","2"] }
 function splitCutSuffixes(id) {
@@ -103,6 +105,9 @@ export function applyEdit(geojson, edit) {
           parentOriginalId: f.properties.originalId,
         };
 
+        const firstLength = length(lineString(firstCoords), { units: "meters" });
+        const secondLength = length(lineString(secondCoords), { units: "meters" });
+
         const firstFeature = {
           ...f,
           id: firstId,
@@ -111,7 +116,8 @@ export function applyEdit(geojson, edit) {
             uid: `${f.properties.uid}_a`,
             // ugyanaz a formázó logika, mint az injectIds-ben - nested vágásnál is
             // konzisztens marad (pl. "way123 (1.2)"), nincs string-konkatenációs duplázódás
-            originalId: formatOriginalId(firstId)
+            originalId: formatOriginalId(firstId),
+            distance: firstLength
           },
           geometry: { type: 'LineString', coordinates: firstCoords }
         };
@@ -122,7 +128,8 @@ export function applyEdit(geojson, edit) {
           properties: {
             ...baseProps,
             uid: `${f.properties.uid}_b`,
-            originalId: formatOriginalId(secondId)
+            originalId: formatOriginalId(secondId),
+            distance: secondLength
           },
           geometry: { type: 'LineString', coordinates: secondCoords }
         };

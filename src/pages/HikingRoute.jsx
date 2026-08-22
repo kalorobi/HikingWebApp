@@ -4,7 +4,9 @@ import { useGeojson } from '../components/hikingRoute/useGeojson';
 import { useSelectedWays } from '../components/hikingRoute/useSelectedWays';
 import HikingRouteMap from '../components/hikingRoute/HikingRouteMap';
 import HikingRouteTable from '../components/hikingRoute/HikingRouteTable';
-import { gpxToGeoJSON } from '../utils/gpxToGeojson'
+import { gpxToGeoJSON } from '../utils/gpxToGeojson';
+import { Tooltip } from 'react-tooltip';
+import { Icon } from '../assets/ikons/MapIcons';
 import ConfirmDialog from '../components/common/ConfirmDialog';
 import logger from '../utils/Logger';
 import LoggerPanel from '../utils/LoggerPanel';
@@ -53,8 +55,7 @@ export default function HikingRoute(){
         }
     };
 
-    const handleClick = (featureId) =>{
-        //setVisited(feature.id, true);
+    const handleFeatureClick = (featureId) =>{
         setSelectedFeatureId(featureId);
     }
 
@@ -78,33 +79,26 @@ export default function HikingRoute(){
     return(
         <>
         <div className='hikingBox'>
-            <div className='header'>Hiking Route v0.0</div>
+            <div className='header'>
+              H E A D E R
+            </div>
             <div className='mainBox'>
                 <div className='mapBox'>
                     <HikingRouteMap 
                         geojson={geojson}
                         gpxGeojson={gpxGeojson}
                         selectedWaysView={selectedWaysView}
-                        onFeatureClick={handleClick}
+                        onFeatureClick={handleFeatureClick}
                         onCutPoint={handleCutPoint}
                     />
                 </div>
                 <div className='viewBox'>
-                    <div className='buttonBox'>
-                        <button className='btn'
-                            onClick={() => setDelConfirmed(true)}>
-                                Clear Database
-                            </button>
-                    </div>
-                    <div className='buttonBox'>
-                        <button
-                            className='btn'
-                            onClick={() => fileInputRef.current?.click()}
-                        >Load GPX</button>
-                        <button
-                            className='btn'
-                            onClick={handleClearGpx}
-                        >Clear GPX</button>
+                    <div className='menuBox'>
+                        <Icon name='route' scale={0.8} onClick={() => fileInputRef.current?.click()}
+                            color='#F2E7D5'
+                            data-tooltip-id="hiking-tooltip"
+                            data-tooltip-content="GPX betöltés"
+                        />
                         <input
                             ref={fileInputRef}
                             type="file"
@@ -112,6 +106,24 @@ export default function HikingRoute(){
                             onChange={handleGpxChange}
                             hidden
                         />
+                        <Icon name='route_off' scale={0.8} onClick={handleClearGpx}
+                            color='#F2E7D5'
+                            data-tooltip-id="hiking-tooltip"
+                            data-tooltip-content="GPX törlés"
+                        />
+                        <Icon name='database_del' scale={0.8} onClick={() => setDelConfirmed(true)}
+                            color='#F2E7D5'
+                            data-tooltip-id="hiking-tooltip"
+                            data-tooltip-content="Helyi adatbázis törlés"
+                        />
+                        <Icon name='upload' scale={0.8}
+                            color='#F2E7D5'
+                            data-tooltip-id="hiking-tooltip"
+                            data-tooltip-content="Feltöltés"
+                            style={{marginLeft: 'auto'}}
+                        />
+
+                        <Tooltip id="hiking-tooltip" className='hikingTooltip' place="bottom"/>
                     </div>
                     <div className='tableBox'>
                     <HikingRouteTable 
@@ -124,22 +136,18 @@ export default function HikingRoute(){
                 </div>
             </div>
             <div className='footer'> F O O T E R </div>
-
         </div>
 
         <ConfirmDialog
             open={delConfirmed}
-            title="Megerősítés"
-            text={
-                'Adatbáztist biztosan törlöd"'
-            }
+            title='Törlés'
+            text={`A helyi adatbázisban ${pendingEditsCount} módosítás van.\nBiztosan folytatod?`}
             onCancel={() => setDelConfirmed(false)}
             onConfirm={() => {
                 forceRefresh();
                 setDelConfirmed(false);
             }}
         />
-
         <LoggerPanel />
         </>
     );
