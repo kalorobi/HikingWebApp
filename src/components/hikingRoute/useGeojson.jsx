@@ -131,6 +131,12 @@ export function useGeojson() {
 
       const finalGeojson = applyAllEdits(freshBase, edits);
 
+      // created_at frissítése közvetlenül feltöltés előtt
+      finalGeojson.metadata = {
+        ...finalGeojson.metadata,
+        created_at: new Date().toISOString()
+      };
+
       // ellenőrzés: minden módosítás tényleg benne van-e
       const { valid, problems } = validateGeojsonAgainstEdits(finalGeojson, edits);
       if (!valid) {

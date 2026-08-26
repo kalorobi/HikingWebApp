@@ -23,6 +23,21 @@ export const gpx = {
         'line-cap': 'round',
     }
 }
+export const gpxName = {
+    minzoom : 13,
+    layout: {
+        'symbol-placement': 'line',
+        'symbol-spacing': 250,
+        'text-field': ['get', 'name'],
+        'text-size': { base: 1, stops: [[12, 10],[16, 10],[20, 22]]},
+        'text-anchor': 'top', 'text-offset': [0, 1.2],
+    },
+    paint: {
+        'text-color': '#B5603E',
+        'text-halo-color': '#fff',
+        'text-halo-width': 1,
+    }
+}
 
 export const hiking = {
     paint: { 
@@ -56,6 +71,16 @@ export const selected = {
         'line-cap': 'round',
     }
 }
+export const selectedVisited = {
+    paint: { 
+        'line-color': '#3D5A73',
+        'line-width': 4
+    },
+    layout: {
+        'line-join': 'round',
+        'line-cap': 'round',
+    }
+}
 
 export const selectedLabel = {
     minzoom : 13,
@@ -63,13 +88,13 @@ export const selectedLabel = {
         'symbol-placement': 'line',
         'symbol-spacing': 200,
         'text-field': ['get', 'originalId'],
-        'text-size': { base: 1, stops: [[13, 10],[16, 10],[20, 22]]},
-        'text-anchor': 'bottom', 'text-offset': [0, -0.8],
+        'text-size': { base: 1, stops: [[13, 12],[16, 12],[20, 22]]},
+        'text-anchor': 'bottom', 'text-offset': [0, -1.2],
     },
     paint: {
-        'text-color': '#4A2E1F',
-        'text-halo-color': '#fff',
-        'text-halo-width': 1,
+        'text-color': '#5B8FA8',
+        'text-halo-color': '#4A2E1F',
+        'text-halo-width': 0.2,
     }
 }
 

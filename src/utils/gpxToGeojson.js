@@ -46,7 +46,7 @@ export function gpxToGeoJSON(gpxText) {
     if (coordinates.length > 1) {
         features.push({
             type: "Feature",
-            properties: {},
+            properties: {name: "-"},
             geometry: {
                 type: "LineString",
                 coordinates
