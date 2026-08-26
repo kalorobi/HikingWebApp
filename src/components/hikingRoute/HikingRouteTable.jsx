@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import './HikingRouteTable.css'
+import { Tooltip } from 'react-tooltip';
+import { TouristSign, TOURIST_SIGNS } from '../../assets/ikons/TouristSign';
 import logger from '../../utils/Logger';
 
 const log = logger.scope('HikingRouteTable');
@@ -44,18 +46,45 @@ export default function HikingRouteTable({ selectedWays, selectedRelations, setS
     });
   }
 
+  function handleSelectClick() {
+    const initial = new Set(
+      selectedWays.features.map(f => f.id)
+    );
+    setViewIds(initial);   
+  }
+
   return (
     <div>
       <div>
         {/* ide kell majd egy turistajel rajzoló */}
-        {selectedRelations?.map((rel, i) => (
-          <span key={rel.id ?? i}>{rel.properties?.jel ?? '-'} </span>
-        ))}
+        {selectedRelations?.map((rel, i) => {
+          const code = rel.properties?.jel;
+          const sign = TOURIST_SIGNS[code];
+
+          return (
+            <span key={rel.id ?? i} style={{margin: "2px"} }>
+              {!sign && (
+                <span>
+                  {code}
+                </span>
+              )}
+              <TouristSign
+                type={sign?.type}
+                color={sign?.color}
+                scale={0.15}
+              />
+            </span>
+          );
+        })}
       </div>
       <table>
         <thead>
           <tr>
-            <th>#</th>
+            <th 
+              onClick={handleSelectClick}
+              data-tooltip-id="select-tooltip"
+              data-tooltip-content="Minden kijelölés"
+            >#</th>
             <th>Név</th>
             <th>Hossz:</th>
             <th>Dátumok</th>
@@ -75,6 +104,8 @@ export default function HikingRouteTable({ selectedWays, selectedRelations, setS
         </tbody>
       </table>
 
+      <Tooltip id="select-tooltip" className='hikingTooltip' place="bottom"/>
+
       <div style={{ marginTop: "12px", display: "flex", gap: "8px", alignItems: "center" }}>
         <label htmlFor="dateSelect">Dátum:</label>
         <input
@@ -91,9 +122,6 @@ export default function HikingRouteTable({ selectedWays, selectedRelations, setS
           OK
         </button>
       </div>
-
-
-
     </div>
   );
 }
@@ -105,15 +133,15 @@ function MapTableRow({ index, feature, isInView, visited, onRowClick }) {
     <tr 
       onClick={() => { onRowClick?.(feature); }}
       style={{ cursor: "pointer" }}
-      className={isInView ? 'row-selected' : ''}
+      className={isInView ? properties.visited ? 'row-selectedVisited': 'row-selected' : ''}
     >
       <td className={visited ? 'row-visited' : ''}>{index}</td>
       <td>{properties.originalId ?? '-'}</td>
       <td>
-{(properties.distance / 1000).toLocaleString("hu-HU", {
-    minimumFractionDigits: 1,
-    maximumFractionDigits: 2,
-  })} km
+        {(properties.distance / 1000).toLocaleString("hu-HU", {
+          minimumFractionDigits: 1,
+          maximumFractionDigits: 2,
+        })} km
       </td>
       <td>
         <span className="visited-dates">

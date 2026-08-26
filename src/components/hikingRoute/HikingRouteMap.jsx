@@ -145,6 +145,7 @@ export default function HikingRouteMap({ geojson, gpxGeojson, selectedWaysView, 
       >
         <Source id="gpx" type="geojson" data={gpxGeojson ?? { ...mapLayers.empty }}>
           <Layer id="gpx-layer" type="line" {...mapLayers.gpx} />
+          <Layer id="gpx-layer-name" type="symbol" {...mapLayers.gpxName} /> 
         </Source>
         <Source
           id="way-source" type="geojson"
@@ -167,7 +168,12 @@ export default function HikingRouteMap({ geojson, gpxGeojson, selectedWaysView, 
           />
         </Source>
         <Source id="way-selected" type="geojson" data={selectedWaysView ?? { ...mapLayers.empty }}>
-          <Layer id="selected-layer" type="line" {...mapLayers.selected} />
+          <Layer id="selected-layer" type="line"
+            filter={['!=', ['get', 'visited'], true]}
+            {...mapLayers.selected} />
+          <Layer id="selected-layer-visited" type="line"
+            filter={['==', ['get', 'visited'], true]}
+            {...mapLayers.selectedVisited} />
           <Layer id="selected-layer-label" type="symbol" {...mapLayers.selectedLabel} />
         </Source>
         <Source id="way-cut" type="geojson" data={cutPreview ?? { ...mapLayers.empty }}>

@@ -20,6 +20,7 @@ export default function HikingRoute(){
     const [selectedWaysView, setSelectedWaysView] = useState(null);
 
     const [delConfirmed, setDelConfirmed] = useState(false);
+    const [uploadConfirmed, setUploadConfirmed] = useState(false);
 
     //Supabase storage-ből letöltött geojson
     const { geojson, loading, setVisited, cutWay, syncToSupabase, pendingEditsCount, forceRefresh } = useGeojson();
@@ -39,6 +40,7 @@ export default function HikingRoute(){
         try {
             const gpxText = await file.text();
             const g = gpxToGeoJSON(gpxText);
+            g.features[0].properties.name = file.name;
 
             setGpxGeojson(g);
             
@@ -116,7 +118,7 @@ export default function HikingRoute(){
                             data-tooltip-id="hiking-tooltip"
                             data-tooltip-content="Helyi adatbázis törlés"
                         />
-                        <Icon name='upload' scale={0.8}
+                        <Icon name='upload' scale={0.8} onClick={() => setUploadConfirmed(true)}
                             color='#F2E7D5'
                             data-tooltip-id="hiking-tooltip"
                             data-tooltip-content="Feltöltés"
@@ -124,6 +126,7 @@ export default function HikingRoute(){
                         />
 
                         <Tooltip id="hiking-tooltip" className='hikingTooltip' place="bottom"/>
+
                     </div>
                     <div className='tableBox'>
                     <HikingRouteTable 
@@ -135,7 +138,7 @@ export default function HikingRoute(){
                     </div>
                 </div>
             </div>
-            <div className='footer'> F O O T E R </div>
+            <div className='footer'>Letöltött geojson: {geojson.metadata.created_at}</div>
         </div>
 
         <ConfirmDialog
@@ -148,6 +151,18 @@ export default function HikingRoute(){
                 setDelConfirmed(false);
             }}
         />
+
+        <ConfirmDialog
+            open={uploadConfirmed}
+            title='Feltöltés'
+            text={`Adatok feltöltése az adatbázisba?`}
+            onCancel={() => setUploadConfirmed(false)}
+            onConfirm={() => {
+                syncToSupabase();
+                setUploadConfirmed(false);
+            }}
+        />
+
         <LoggerPanel />
         </>
     );

@@ -15,6 +15,8 @@ import LivePlanRouter from './pages/LivePlanRouter';
 import LivePlanQueryProvider from './services/query/livePlanQuery/LivePlanQueryProvider';
 import LiveQueryProvider from './services/query/liveQuery/LiveQueryProvider';
 
+import TouristSignTest from './utils/TouristSign.Test';
+
 function App() {
   return (
     <AuthProvider>
@@ -32,6 +34,9 @@ function App() {
           />
           <Route path="/hikingRoute" element={<HikingRoute />} />
           <Route path="/" element={<Home />} />
+
+          <Route path="/test" element={<TouristSignTest />} />
+
           <Route path="/login" element={<Login />} />
 
           <Route
