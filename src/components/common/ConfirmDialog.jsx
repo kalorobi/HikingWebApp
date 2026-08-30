@@ -2,6 +2,7 @@ import './ConfirmDialog.css';
 
 export default function ConfirmDialog({
   open,
+  cancel = true,
   title = "Megerősítés",
   text = "Biztosan végrehajtod a műveletet?",
   onConfirm,
@@ -19,9 +20,11 @@ export default function ConfirmDialog({
         <p>{text}</p>
 
         <div className="confirm-buttons">
+          {cancel &&
           <button className="cancel" onClick={onCancel}>
             Mégsem
           </button>
+          }
 
           <button className="ok" onClick={onConfirm}>
             OK

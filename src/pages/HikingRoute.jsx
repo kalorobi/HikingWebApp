@@ -8,10 +8,6 @@ import { gpxToGeoJSON } from '../utils/gpxToGeojson';
 import { Tooltip } from 'react-tooltip';
 import { Icon } from '../assets/ikons/MapIcons';
 import ConfirmDialog from '../components/common/ConfirmDialog';
-import logger from '../utils/Logger';
-import LoggerPanel from '../utils/LoggerPanel';
-
-const log = logger.scope("HikingRoute");
 
 export default function HikingRoute(){
     //Térképen kijelölt szakasz
@@ -19,11 +15,14 @@ export default function HikingRoute(){
     //Táblázatban kijelölt szakaszok
     const [selectedWaysView, setSelectedWaysView] = useState(null);
 
-    const [delConfirmed, setDelConfirmed] = useState(false);
-    const [uploadConfirmed, setUploadConfirmed] = useState(false);
+    const [confirmState, setConfirmState] = useState(null); 
+    const askConfirm = (title, text, onConfirm, cancel) => {
+        setConfirmState({ title, text, onConfirm, cancel });
+    };
 
     //Supabase storage-ből letöltött geojson
-    const { geojson, loading, setVisited, cutWay, syncToSupabase, pendingEditsCount, forceRefresh } = useGeojson();
+    const { geojson, loading, setVisited, cutWay, undoLastEdit,
+        syncToSupabase, pendingEditsCount, forceRefresh, addGpx } = useGeojson();
 
     const [ gpxGeojson, setGpxGeojson] = useState(null);
 
@@ -49,6 +48,12 @@ export default function HikingRoute(){
         }
     };
 
+    const handleGpxOk = () => {
+        const gpxName = gpxGeojson.features[0]?.properties.name ?? null;
+        if(!gpxName) return;
+        addGpx(gpxName);
+    }
+
     const handleClearGpx = () => {
         setGpxGeojson(null);
 
@@ -56,6 +61,10 @@ export default function HikingRoute(){
             fileInputRef.current.value = '';
         }
     };
+
+    const handleCloseConfirm = () => {
+        setConfirmState(null);
+    }
 
     const handleFeatureClick = (featureId) =>{
         setSelectedFeatureId(featureId);
@@ -66,7 +75,6 @@ export default function HikingRoute(){
     // ahol a vágás történjen
     const handleCutPoint = useCallback((featureId, pointIndex) => {
         cutWay(featureId, pointIndex);
-        log.debug('cutWay', { featureId, pointIndex });
     }, [cutWay]);
 
     const handleConfirmVisited = useCallback((date) => {
@@ -81,8 +89,8 @@ export default function HikingRoute(){
     return(
         <>
         <div className='hikingBox'>
-            <div className='header'>
-              H E A D E R
+            <div className='hikingHeader'>
+              Hiking Route v1.0
             </div>
             <div className='mainBox'>
                 <div className='mapBox'>
@@ -96,6 +104,15 @@ export default function HikingRoute(){
                 </div>
                 <div className='viewBox'>
                     <div className='menuBox'>
+                         <Icon name='undo' scale={0.8}
+                            onClick={
+                                pendingEditsCount > 0 ?
+                                undoLastEdit : undefined
+                            }
+                            color={pendingEditsCount > 0 ?  '#F2E7D5' : '#C9A78E'}
+                            data-tooltip-id="hiking-tooltip"
+                            data-tooltip-content="Visszavonás"
+                        />
                         <Icon name='route' scale={0.8} onClick={() => fileInputRef.current?.click()}
                             color='#F2E7D5'
                             data-tooltip-id="hiking-tooltip"
@@ -108,18 +125,57 @@ export default function HikingRoute(){
                             onChange={handleGpxChange}
                             hidden
                         />
-                        <Icon name='route_off' scale={0.8} onClick={handleClearGpx}
-                            color='#F2E7D5'
+                        <Icon name='route_ok' scale={0.8}
+                            onClick={() => 
+                                gpxGeojson?
+                                    askConfirm(
+                                        'GPX rögzítés',
+                                        `GPX feldolgozás megtörtént?`,
+                                        handleGpxOk
+                                )
+                                : undefined
+                            }
+                            color={gpxGeojson?  '#F2E7D5' : '#C9A78E'}
+                            data-tooltip-id="hiking-tooltip"
+                            data-tooltip-content="GPX hozzáadás"
+                        />
+                        <Icon name='route_off' scale={0.8} 
+                            onClick={
+                                gpxGeojson?
+                                    handleClearGpx
+                                    : undefined
+                            }
+                            color={gpxGeojson?  '#F2E7D5' : '#C9A78E'}
                             data-tooltip-id="hiking-tooltip"
                             data-tooltip-content="GPX törlés"
                         />
-                        <Icon name='database_del' scale={0.8} onClick={() => setDelConfirmed(true)}
-                            color='#F2E7D5'
+                        <Icon name='database_del' scale={0.8}
+                            onClick={() =>
+                                pendingEditsCount > 0 ?
+                                askConfirm(
+                                    'Törlés',
+                                    `A helyi adatbázisban ${pendingEditsCount} módosítás van.
+                                    Biztosan folytatod?`,
+                                    forceRefresh
+                                )
+                                : undefined
+                            }
+                            color={pendingEditsCount > 0 ?  '#F2E7D5' : '#C9A78E'}
                             data-tooltip-id="hiking-tooltip"
                             data-tooltip-content="Helyi adatbázis törlés"
                         />
-                        <Icon name='upload' scale={0.8} onClick={() => setUploadConfirmed(true)}
-                            color='#F2E7D5'
+                        <Icon name='upload' scale={0.8}
+                            onClick={() => 
+                                pendingEditsCount > 0 ?
+                                askConfirm(
+                                    'Feltöltés',
+                                    `Adatok feltöltése az adatbázisba?
+                                    A helyi adatbázisban ${pendingEditsCount} módosítás van.`,
+                                    syncToSupabase
+                                ) 
+                                : undefined 
+                            }
+                            color={pendingEditsCount > 0 ?  '#F2E7D5' : '#C9A78E'}
                             data-tooltip-id="hiking-tooltip"
                             data-tooltip-content="Feltöltés"
                             style={{marginLeft: 'auto'}}
@@ -138,32 +194,35 @@ export default function HikingRoute(){
                     </div>
                 </div>
             </div>
-            <div className='footer'>Letöltött geojson: {geojson.metadata.created_at}</div>
+            <div className='hikingFooter'>
+                <span>Letöltött geojson: {geojson.metadata.created_at.slice(0, 10)}</span> 
+                <span>Betöltött gpx: {gpxGeojson?.features[0]?.properties.name ?? '-'}</span>
+                <Icon name='info' scale={0.8}
+                    onClick={() => 
+                        askConfirm(
+                            'Információk',
+                            `Utolsó gpx: ${geojson.metadata.gpxes[geojson.metadata.gpxes.length-1].name}
+                            Geojson alap: ${geojson.metadata.base}`,
+                            handleCloseConfirm,
+                        )
+                    }
+                    color='#F2E7D5'
+                    style={{marginLeft: 'auto'}}
+                />
+            </div>
         </div>
 
         <ConfirmDialog
-            open={delConfirmed}
-            title='Törlés'
-            text={`A helyi adatbázisban ${pendingEditsCount} módosítás van.\nBiztosan folytatod?`}
-            onCancel={() => setDelConfirmed(false)}
+            open={!!confirmState}
+            cancel={confirmState?.cancel ?? true}
+            title={confirmState?.title}
+            text={confirmState?.text}
+            onCancel={() => setConfirmState(null)}
             onConfirm={() => {
-                forceRefresh();
-                setDelConfirmed(false);
+                confirmState?.onConfirm();
+                setConfirmState(null);
             }}
         />
-
-        <ConfirmDialog
-            open={uploadConfirmed}
-            title='Feltöltés'
-            text={`Adatok feltöltése az adatbázisba?`}
-            onCancel={() => setUploadConfirmed(false)}
-            onConfirm={() => {
-                syncToSupabase();
-                setUploadConfirmed(false);
-            }}
-        />
-
-        <LoggerPanel />
         </>
     );
 }

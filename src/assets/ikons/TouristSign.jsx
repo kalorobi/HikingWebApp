@@ -162,47 +162,14 @@ const signs = {
     ),
 maria: (
     <>
-        {/* bal szár + első 180°-os ív + középső szár */}
-        <path
-            d="
-                M 17.5 85
-                V 30
-                A 21.25 21.25 0 0 1 60 30
-                V 85
-            "
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="15"
-            strokeLinecap="butt"
-            strokeLinejoin="round"
-        />
-
-        {/* második 180°-os ív + jobb szár + kifelé forduló alsó ív */}
-        <path
-            d="
-                M 60 30
-                A 21.25 21.25 0 0 1 102.5 30
-                V 70
-                A 15 15 0 0 0 117.5 85
-            "
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="15"
-            strokeLinecap="butt"
-            strokeLinejoin="round"
-        />
-
-        {/* kereszt vízszintes szára – 5 mm hézag mindkét oldalon */}
-        <path
-            d="
-                M 30 50
-                H 90
-            "
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="15"
-            strokeLinecap="butt"
-        />
+       <path d="M 10 90 V 35 A 25 25 0 0 1 60 35
+            V 90 H 45 V 35 A 10 10 0 0 0 25 35 V 90 Z
+        "/>
+        <path d="M 45 35 A 25 25 0 0 1 95 35 V 72.5
+            A 7.5 7.5 0 0 0 102.5 80 V 90 H 88.5 A 7.5 7.5 0 0 1 80 82.5
+            V 35 A 10 10 0 0 0 60 35 Z
+        "/>
+        <path d="M 35 50 H 70 V 65 H 35 Z"/>
     </>
 ),
     empty : (
@@ -249,9 +216,7 @@ export function TouristSign({
                 />
             )}
 
-            <g fill={COLORS[color] ?? color}
-                color={COLORS[color] ?? color}
-            >
+            <g fill={COLORS[color] ?? color}>
                 {sign}
             </g>
 

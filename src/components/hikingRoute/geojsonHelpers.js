@@ -49,6 +49,28 @@ function splitLineString(coords, pointIndex) {
 }
 
 export function applyEdit(geojson, edit) {
+  // ADD_GPX: nem feature-szintű módosítás, hanem a geojson gyökerén lévő
+  // metadata.gpxes tömböt bővíti egy { name, date } bejegyzéssel - ezért a
+  // feature-flatMap ELŐTT kezeljük le, és a metódus itt visszatér.
+  // Önálló művelet: nincs kapcsolatban semmilyen feature-höz vagy SET_VISITED
+  // edithez, bármikor, azoktól függetlenül hívható/replay-elhető.
+  if (edit.type === 'ADD_GPX') {
+    const { gpxName, date } = edit.payload;
+    const existingGpxes = geojson.metadata?.gpxes ?? [];
+
+    // duplikátum elkerülése: ha ez a gpx név már szerepel a listában, nem
+    // vesszük fel újra (pl. ha valaki véletlenül kétszer futtatja ugyanazt a gpx-et)
+    if (!gpxName || existingGpxes.some((g) => g.name === gpxName)) return geojson;
+
+    return {
+      ...geojson,
+      metadata: {
+        ...geojson.metadata,
+        gpxes: [...existingGpxes, { name: gpxName, date: date ?? new Date().toISOString() }]
+      }
+    };
+  }
+
   return {
     ...geojson,
     // az elsődleges azonosító a feature.id (OSM eredetű); a properties.uid csak a
@@ -147,8 +169,8 @@ export function applyAllEdits(geojson, edits) {
   return edits.reduce((acc, edit) => applyEdit(acc, edit), geojson);
 }
 
-// Ellenőrzi, hogy a végső geojson tartalmazza-e az összes SET_VISITED módosítást
-// (egyszerű konzisztencia-check: minden edit a logban tényleg megjelenik-e a feature-ben)
+// Ellenőrzi, hogy a végső geojson tartalmazza-e az összes SET_VISITED / ADD_GPX módosítást
+// (egyszerű konzisztencia-check: minden edit a logban tényleg megjelenik-e a végeredményben)
 export function validateGeojsonAgainstEdits(geojson, edits) {
   const byFeature = new Map(geojson.features.map((f) => [f.id, f]));
   const problems = [];
@@ -244,6 +266,17 @@ export function validateGeojsonAgainstEdits(geojson, edits) {
     }
   }
 
+  // ADD_GPX edit-ek ellenőrzése: minden feldolgozott gpx nevének (a hozzá tartozó
+  // dátummal együtt felvett bejegyzésnek) szerepelnie kell a végleges
+  // geojson.metadata.gpxes tömbjében - a feature-öktől ez teljesen független
+  const finalGpxes = geojson.metadata?.gpxes ?? [];
+  for (const edit of edits) {
+    if (edit.type !== 'ADD_GPX') continue;
+    if (!finalGpxes.some((g) => g.name === edit.payload.gpxName)) {
+      problems.push(`Hiányzó gpx bejegyzés a metadata.gpxes-ben: ${edit.payload.gpxName}`);
+    }
+  }
+
   return { valid: problems.length === 0, problems };
 }
 
@@ -260,6 +293,12 @@ export function stripInternalFields(geojson) {
       return { ...f, properties: rest };
     })
   };
+}
+
+// megmondja, hogy egy adott nevű gpx már fel van-e jegyezve feldolgozottként
+// a geojson.metadata.gpxes tömbjében (pl. UI-ban egy fájlfeltöltő letiltásához)
+export function isGpxProcessed(geojson, gpxName) {
+  return Boolean(geojson?.metadata?.gpxes?.some((g) => g.name === gpxName));
 }
 
 export function isToday(dateString) {
