@@ -6,7 +6,12 @@
   margin: 0;
 }
 
-header, footer {
+.hikingHeader, .hikingFooter {
+  display: flex;
+  align-items: center;
+  margin-left: 5px;
+  margin-right: 5px;
+  gap: 12px;
   height: 32px;
   flex-shrink: 0;
 }

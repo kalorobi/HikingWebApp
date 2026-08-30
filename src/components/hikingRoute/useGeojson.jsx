@@ -66,18 +66,23 @@ export function useGeojson() {
   }, []);
 
   // --- 2. lépés: szerkesztés(ek) mentése (db + state) ---
-  // featureIds lehet egyetlen id vagy id-tömb is; a payload minden érintett feature-re ugyanaz
+  // featureIds lehet egyetlen id vagy id-tömb is; a payload minden érintett feature-re ugyanaz.
+  // Minden dispatchEdit-hívás egy "batch"-nek számít (közös batchId-vel) - ez teszi
+  // lehetővé, hogy az undoLastEdit egyetlen logikai lépésként (ne csak egy rekordként)
+  // tudja visszavonni pl. egy több feature-t érintő setVisited hívást is.
   const dispatchEdit = useCallback(async (type, featureIds, payload) => {
     log.debug('dispatch edit');
 
     const ids = Array.isArray(featureIds) ? featureIds : [featureIds];
     const createdAt = new Date().toISOString();
+    const batchId = `${createdAt}_${Math.random().toString(36).slice(2)}`;
 
     const newEdits = ids.map((featureId) => ({
       featureId,
       type,
       payload,
       createdAt,
+      batchId,
       synced: false
     }));
 
@@ -104,6 +109,39 @@ export function useGeojson() {
     (featureId, pointIndex) => dispatchEdit('CUT_WAY', featureId, { pointIndex }),
     [dispatchEdit]
   );
+
+  // önálló, feature-öktől teljesen független művelet: egy gpx nevét és a
+  // feldolgozás dátumát rögzíti a geojson.metadata.gpxes tömbjében. Bármikor
+  // hívható, akár jóval a hozzá tartozó setVisited hívások után is - nincs
+  // közöttük semmilyen kényszerű összekapcsolás. A featureId ("metadata") csak
+  // egy fix placeholder, mert az editLog rekordnak formálisan kell egy featureId
+  // mező, de az applyEdit ADD_GPX ágában ez nem kerül feature-matchingre.
+  const addGpx = useCallback(
+    (gpxName, date = new Date().toISOString()) =>
+      dispatchEdit('ADD_GPX', 'metadata', { gpxName, date }),
+    [dispatchEdit]
+  );
+
+  // --- "mégsem": az utolsó dispatchEdit-hívás (batch) TELJES egészének visszavonása ---
+  // Típusfüggetlen: működik SET_VISITED, CUT_WAY és ADD_GPX esetén is, mert nem az
+  // edit tartalmát értelmezi, csak egyszerűen eltávolítja a legutóbb létrejött batch
+  // összes rekordját - a mergedGeojson (useMemo) ezután automatikusan újraszámolódik
+  // baseGeojson-ból a maradék edits alapján, tehát a hatás is visszavonódik.
+  const undoLastEdit = useCallback(async () => {
+    if (edits.length === 0) return;
+
+    // az edits tömb append-elve épül fel (dispatchEdit mindig a végéhez ad hozzá),
+    // ezért az utolsó elem batchId-je adja a legutóbbi logikai lépést
+    const lastBatchId = edits[edits.length - 1].batchId;
+    const toRemove = edits.filter((e) => e.batchId === lastBatchId);
+    const toRemoveLocalIds = toRemove.map((e) => e.localId).filter((id) => id !== undefined);
+
+    log.debug('undo last edit', { batchId: lastBatchId, count: toRemove.length });
+
+    await db.editLog.bulkDelete(toRemoveLocalIds);
+
+    setEdits((prev) => prev.filter((e) => e.batchId !== lastBatchId));
+  }, [edits]);
 
   const syncingRef = useRef(false);
 
@@ -193,8 +231,11 @@ export function useGeojson() {
     loading,
     error,
     pendingEditsCount: edits.length,
+    canUndo: edits.length > 0,
     setVisited,
     cutWay,
+    addGpx,
+    undoLastEdit,
     syncToSupabase,
     forceRefresh
   };
