@@ -1,0 +1,456 @@
+<html>
+<head>
+<meta charset="utf-8">
+	<!-- Leaflet -->
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+     crossorigin=""/>
+     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+     crossorigin=""></script>
+	<link href="./overpassEdit.css" rel="stylesheet" />
+</head>
+<body>
+	<header>
+		<div class="headerDiv" id="mapHeader">Overpass EDIT</div>
+	</header>
+	<section>
+		<article>
+			<div id="map"></div>
+		</article>
+		<nav class="panel">
+			<section class="workFlow">
+				<div class="wfStep">1. Load Overpass</div>
+				<label class="file-upload" id="kmlLabel1">Load OVERPASS<input id="overpass" type="file" hidden></label>
+				<label class="file-upload" id="kmlLabel2">Load Overpass GEOJSON<input id="geojson" type="file" hidden></label>
+				<label class="wfInfo" id="fileName">File name:</label>
+				<hr>
+				<table class="colorFilter">
+				<tr><td><input type="checkbox" class="colorF" id="K" checked>K</td><td><input type="checkbox" class="colorF" id="P" checked>P</td>
+					<td><input type="checkbox" class="colorF" id="Z" checked>Z</td><td><input type="checkbox" class="colorF" id="S" checked>S</td>
+					<td><input type="checkbox" class="colorF" id="E" checked>E</td>
+				</tr></table>
+				<div class="table-wrapper" id="dataTable"></div>
+			</section>
+			<section class="console"><div class="wrapper"><textarea id="console" readonly></textarea></div></section>
+		</nav>
+	</section>
+	<footer>
+  		<p>M A P - Overpass EDIT</p>
+	</footer>
+<script src="../../src/utils/overpassToGeojson.js" charset="utf-8"></script>
+<script>
+var fileName = "";
+var geoJson = null;
+var actRelation = {};
+var actWays = {};
+var colorFilter = {"K" : true, "P" : true, "Z" : true, "S" : true, "E" : true};
+var geoLayer = L.geoJSON();
+var markerLayer = L.featureGroup();
+var markerLayer2 = L.featureGroup();
+const ONLINE_MAPS = [
+{"map" : "https://{s}.tile.openstreetmap.hu/tt/{z}/{x}/{y}.png", "name":"turistautak","zoom" : 16},
+];
+const colorText = getComputedStyle(document.documentElement).getPropertyValue('--baseText');
+const colorDark = getComputedStyle(document.documentElement).getPropertyValue('--baseDark');
+const colorLight = getComputedStyle(document.documentElement).getPropertyValue('--baseLight');
+//*************************BASE MAP*****************************
+const osm = L.tileLayer('https://tile.opentopomap.org/{z}/{x}/{y}.png');
+var baseMaps = {"OSM" : osm };
+var overlayMaps = {};
+const map = L.map('map', {center : [47.9262186,19.8266254], zoom: 13, layers : [osm], zoomControl:false})
+//************************OVERLAY MAPS***************************
+for(let mapId in ONLINE_MAPS) {
+	const onlineMap = L.tileLayer(ONLINE_MAPS[mapId].map, {
+		minZoom: 9,
+		maxZoom: 19,
+		maxNativeZoom: ONLINE_MAPS[mapId].zoom,});
+	overlayMaps[ONLINE_MAPS[mapId].name] = onlineMap;
+}
+L.control.layers(baseMaps, overlayMaps).addTo(map);
+
+//****************WF 1/a STEP - LOAD Overpasss*******************************
+document.getElementById('overpass').addEventListener('change' , function(event) {
+	const selectedFile = event.target.files[0];
+	if (selectedFile) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+			const overpass = JSON.parse(e.target.result);
+			geoJson = overpassToGeoJson(overpass);
+
+			fileInfo(selectedFile);
+			fillTable();
+//TODO way center way clean!
+			//relationCenter();
+        };
+		reader.readAsText(selectedFile);
+    }
+});
+//****************WF 1/b STEP - LOAD Overpasss*******************************
+document.getElementById('geojson').addEventListener('change' , function(event) {
+	const selectedFile = event.target.files[0];
+	if (selectedFile) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+//TODO meglévő geojson olvasás
+			geoJson = JSON.parse(e.target.result);
+			
+geoJson.features = geoJson.features.filter((f) => {
+if(f.properties.type === 'way'){
+	if(f.properties.relations.length === 0) {
+		console.log("DEL WAY");
+		return false;
+	} else {return true}
+} else {return true}
+});			
+			
+			fileInfo(selectedFile);
+			fillTable();
+        };
+		reader.readAsText(selectedFile);
+    }
+});
+const checkboxes = document.querySelectorAll('.colorF');
+checkboxes.forEach(checkbox => {
+	checkbox.addEventListener('change', (event) => {
+	const id = event.target.id;
+	colorFilter[id] = event.target.checked;
+	fillTable()
+  });
+});
+function fillTable(){
+	const dataTable = document.getElementById("dataTable");
+	dataTable.innerHTML = "";
+	const table = document.createElement("table"); table.id="pointTable";
+	const thead = document.createElement("thead"); table.appendChild(thead);
+	const tbody = document.createElement("tbody"); table.appendChild(tbody);
+	dataTable.appendChild(table);
+	//const thead = document.querySelector("#pointTable thead");
+	thead.innerHTML = "<tr><th>#</th><th>JEL</th><th>Út neve</th></tr>";
+	
+	//const tbody = document.querySelector("#pointTable tbody");
+	tbody.innerHTML = "";
+	let txt = "";
+
+	geoJson.features.forEach((feature, index) => {
+	if(feature.properties.type === "relation"){
+		const props = feature.properties || {};
+		const name = props.name || "";
+		const jel = props.jel || "E";
+		if(checkColor(jel.charAt(0).toUpperCase())){
+			const row = document.createElement("tr");
+			row.id = feature.id;
+			txt = "<td align='center'";
+			if(props.dirty){txt += " bgcolor='" + colorDark + "'";}
+			txt += ">"+ index +"</td><td>"+jel+"</td><td>" + name + "</td>";
+			row.innerHTML = txt;
+			tbody.appendChild(row);
+		
+			row.addEventListener("click", () => {
+				findRelation(parseInt(row.id),{fitBounds:true});
+			});
+		}
+	}
+	});		
+}
+function checkColor(jel){
+	for(let color in colorFilter){
+		if(jel === color) {
+			return colorFilter[color];
+		}
+	}
+	if(colorFilter['E']){return true;}
+	return false;
+}
+function findRelation(relationId, options){
+	const id = parseInt(relationId);
+	const selectedFeatures = geoJson.features.filter((feature, index) => {
+		if(feature.geometry.type === "LineString"){
+			return feature.properties.relations.some(rel => rel === id);
+		}
+	});
+	if (selectedFeatures) {
+		actWays = {"type" : "FeatureCollection", "features" : []}
+		actRelation = geoJson.features.find(feature => feature.id === id);
+		for(let count in selectedFeatures) {
+			actWays.features.push(selectedFeatures[count]);
+		}
+		viewMap(options);
+		relationEdit();
+	}
+}
+function relationEdit(){
+	const dataTable = document.getElementById("dataTable");
+	dataTable.innerHTML = "";
+
+	const relationDiv = document.createElement("div");
+	relationDiv.className = "wfStep";
+	const id = actRelation.id;
+	let distance = 0;
+	actWays.features.forEach((way) => {
+		distance += way.properties.distance/1000;
+	});
+	let txt = "<span style='font-size: 16px;'>Hiking route: " + id + "</span><br><br>";
+	txt += "<input type='text' value='" + actRelation.properties.name + "' id='"+ id +"'><br>";
+	txt += "<div class='wfStep'>Hiking route distance: " + Math.floor(distance*100)/100 + " km</div>";
+	txt += "Dirty: <input type='checkbox' id='"+actRelation.id +"_dirty' ";
+		if(!actRelation.dirty){txt +="checked"}
+	txt += ">";
+	relationDiv.innerHTML = txt;
+	dataTable.appendChild(relationDiv);
+	
+	document.getElementById(id).addEventListener('onchange', (event) => {
+		console.log(event.target.value);
+	});
+	const btnOk = document.createElement("button");
+	btnOk.id = "okRelation"; btnOk.textContent = "OK";
+	dataTable.appendChild(btnOk);
+
+	btnOk.addEventListener('click', modifyRelation);
+	
+	const btnDel = document.createElement("button");
+	btnDel.id = "delRelation"; btnDel.textContent = "DEL";
+	dataTable.appendChild(btnDel);
+
+	btnDel.addEventListener('click', function () {delRelation(actRelation.id)});
+	
+	const table = document.createElement("table"); table.id="pointTable";
+	const thead = document.createElement("thead"); table.appendChild(thead);
+	const tbody = document.createElement("tbody"); table.appendChild(tbody);
+	
+	thead.innerHTML = "<tr><th>#</th><th>Way ref</th><th>rel</th></tr>";
+	actWays.features.forEach((feature,index) => {
+		const row = document.createElement("tr");
+		row.id = feature.id;
+		let txt = "<td>" + index + "</td><td>" + feature.id + "</td><td>" + feature.properties.relations.length + "</td>";
+		row.innerHTML = txt;
+		tbody.appendChild(row);
+		
+		row.addEventListener("click", (e) => {
+			const tableBg = document.getElementById('pointTable');
+			for(let r = 0; r < table.rows.length; r++){
+				table.rows[r].cells[1].bgColor = colorLight;
+			}
+			e.target.bgColor = colorDark;
+			viewMap({wayId: row.id});
+		});
+	});
+	
+	dataTable.appendChild(table);
+}
+function modifyRelation() {
+	const id = actRelation.id;
+	const newRelationName = document.getElementById(id).value;
+	const newDirty = document.getElementById(id + "_dirty").checked;
+	if(newRelationName !== actRelation.properties.name || newDirty !== actRelation.properties.dirty) {
+//TODO modify relation
+		actRelation.properties.dirty = newDirty;
+		actRelation.properties.name = newRelationName;
+		addConsole("Modify relation: " + id);
+	}
+	fillTable();
+}
+function viewMap(options){
+	geoLayer.clearLayers();
+	markerLayer.clearLayers();
+	markerLayer = L.featureGroup();
+	geoLayer = L.geoJSON(actWays, {
+		onEachFeature: addWayToMap,
+		style: function(feature){
+			//if(randomBoolean()/*!feature.properties.visible*/){return {color: colorDark, weight: 8, opacity: 0.5, lineCap: 'round', lineJoin: 'round'};}
+			if(options){if(options.wayId === feature.id){return {color: colorDark, weight: 8, opacity: 0.5, lineCap: 'round', lineJoin: 'round'};}}
+			else{return{color: '#3388ff', weight: 3, opacity: 1, lineCap: 'round', lineJoin: 'round'};}
+		}
+	}).addTo(map);
+	if(options){
+		if(options.fitBounds){map.fitBounds(geoLayer.getBounds());}
+		if(options.wayId){
+			const layer = geoLayer.getLayers().find(l => l.feature.id === options.wayId);
+			if (layer) {map.fitBounds(layer.getBounds());}
+		}
+	}
+	if(map.zoom >=14){markerLayer.addTo(map)}
+}
+function addWayToMap(feature, layer){
+	const coord = feature.geometry.coordinates[0];
+	let popUpTxt = "<b>" + actRelation.properties.name + "</b><br>";
+	popUpTxt += "Way id: " + feature.id + "<br><br>";
+	popUpTxt += "Way visited: " + feature.properties.visited + "<br>";
+	popUpTxt += "Way visited dates count: " + feature.properties.visitedDates.length + "<br><br>";
+	popUpTxt += "Del way: <button onclick=\"delWay('"+ feature.id +"')\">DEL</button><br>";
+	
+	popUpTxt+= "Relations:<br>";
+	popUpTxt += "<table class='leaflet-table'><thead><tr><th>ref</th><th>Hiking route</th><th>dirty</th></tr><thead><tbody>"
+	for(let rel of feature.properties.relations){
+		rel2 = geoJson.features.find(f => f.id === rel);
+		popUpTxt += "<tr><td><a href='#' class='popUpLink' data-index='" + rel + "'>" + rel + "</a></td><td>"+ rel2.properties.name + "</td><td>";
+		if(rel2.properties.dirty){popUpTxt+="<span class='leaflet-span'>X</span></td></tr>";}else{popUpTxt+=" - OK</td></tr>"}
+	}
+	popUpTxt += "</tbody></table>";
+	layer.bindPopup(popUpTxt);
+	
+	layer.on('popupopen', function() {
+		var links = document.querySelectorAll('.popUpLink');
+		links.forEach(function(link) {
+			link.addEventListener('click', function(e) {
+				e.preventDefault();
+				var relationId = this.getAttribute('data-index');
+				findRelation(relationId, {fitBounds:false});				
+			});
+		});
+	}).addTo(map);
+	
+	layer.on('click' , function(e) {
+	//TODO a táblázatban jelenjen meg eltérő háttérrel
+//console.log(e.target.feature.id);
+	});
+	L.circleMarker([coord[1], coord[0]], {
+		radius: 5,
+		color: 'blue',
+		fillColor: colorText,
+		fillOpacity: 0.7,
+		weight: 2
+	}).addTo(markerLayer);
+}
+map.on('zoomend', function() {
+	if (map.getZoom() >= 14) {
+		if (!map.hasLayer(markerLayer)) {
+			markerLayer.addTo(map);
+		}
+	} else {
+		if (map.hasLayer(markerLayer)) {
+			map.removeLayer(markerLayer);
+		}
+	}
+});
+function delRelation(relId) {
+	const id = relId;
+	geoJson.features = geoJson.features.filter(feature => feature.id !== id);
+	geoJson.features.forEach((feature, index) => {
+		if(feature.properties.type === 'way'){
+			feature.properties.relations.forEach((rel) => {
+				if(rel === id){
+				feature.properties.relations = feature.properties.relations.filter(rel => rel !== id);
+				}
+			});
+		}
+	});
+	addConsole("Relation DEL: " + id);
+	geoLayer.clearLayers();
+	markerLayer.clearLayers();
+	markerLayer = L.featureGroup();
+	fillTable();
+}
+function delWay(id){
+	let delRef = false;
+	geoJson.features = geoJson.features.filter(feature => feature.id !== id);
+
+	geoJson.features.forEach((f) => {
+		if(f.properties.type === 'relation'){
+			if(f.properties.ways.includes(id)){
+				f.properties.ways = f.properties.ways.filter(w => w !== id);
+				addConsole("Modify relation: " + f.id);
+				if(f.properties.ways.length === 0){
+					delRelation(f.id); delRef = true;
+				}
+			}
+		}
+	});
+	addConsole("Del way: " + id);
+	if(!delRef){
+		findRelation(actRelation.id, {fitBounds:false});
+	}
+	else {
+		geoLayer.clearLayers();
+		markerLayer.clearLayers();
+		markerLayer = L.featureGroup();
+		fillTable();
+	}
+}
+function fileInfo(fName){
+	fileName = fName.name;
+	document.getElementById('fileName').innerHTML = `File name: ${fileName}`;
+	addConsole(`Open file: ${fileName}`);
+}
+function addConsole(text){
+	let console = document.getElementById('console');
+	console.innerHTML += `${text}\n`;
+}
+function randomBoolean() {
+  return Math.random() < 0.5;
+}
+
+//*******************************************************************
+//****Find ways with center way**********
+var cleanGeoJson = {"type" : "FeatureCollection", "features" : []}
+function relationCenter(){
+	let count = 0;
+	geoJson.features.forEach((f) => {
+		if(f.properties.type ==='way'){
+			let fCoordS = L.latLng(f.geometry.coordinates[0]);
+			let fCoordE = L.latLng(f.geometry.coordinates[f.geometry.coordinates.length-1]);
+			geoJson.features.forEach((ff) => {
+				if(ff.properties.type === 'way'){
+					if(ff.geometry.coordinates.length > 2){
+						let dirty = false; let cutId = new Set();
+						for(let i = 1; i < ff.geometry.coordinates.length-2; i++){
+							if(fCoordS.equals(ff.geometry.coordinates[i]) || fCoordE.equals(ff.geometry.coordinates[i])){
+								cutId.add(i);
+console.log(ff.id + " - index " + i);
+								addM(ff.geometry.coordinates[i]); count++;
+								dirty = true;
+							}
+						}
+						if(!dirty){
+							 cleanGeoJson.features.push(f);
+						}
+					}
+				}
+			});
+		}
+		else {cleanGeoJson.features.push(f)}
+	});
+}
+function addM(coordinate){
+L.circleMarker([coordinate[1], coordinate[0]], {
+		radius: 5,
+		color: 'red',
+		fillColor: colorText,
+		fillOpacity: 0.7,
+		weight: 2
+		}).addTo(markerLayer2);
+		markerLayer2.addTo(map);
+}
+//**********************************************************************
+
+
+//**************** DOWNLOAD **********************************
+const btn = document.getElementById('showGeojsonBtn');
+const modal = document.getElementById('geojsonModal');
+const closeBtn = document.getElementById('closeModal');
+const textArea = document.getElementById('geojsonText');
+const selectAllBtn = document.getElementById('selectAllBtn');
+
+btn.addEventListener('click', () => {
+	const geojsonText = JSON.stringify(cleanGeoJson, null, 2);
+	textArea.value = geojsonText;
+	modal.style.display = 'block';
+});
+
+closeBtn.addEventListener('click', () => {
+	modal.style.display = 'none';
+});
+
+window.addEventListener('click', e => {
+	if (e.target === modal) {
+		modal.style.display = 'none';
+	}
+});
+
+selectAllBtn.addEventListener('click', () => {
+		textArea.focus();
+		textArea.select();
+});
+</script>
+</body>
+</html>

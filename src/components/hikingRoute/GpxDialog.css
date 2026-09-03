@@ -1,0 +1,114 @@
+.gpxDialogOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.gpxDialogBox {
+  background-color: var(--color-dark);
+  color: var(--color-text);
+  border: 1px solid var(--color-moss);
+  border-radius: var(--radius-md);
+  width: 320px;
+  max-width: 90vw;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  padding: 14px;
+  gap: 10px;
+}
+
+.gpxDialogHeader {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.gpxDialogFilter {
+  border: 1px solid var(--color-moss);
+  border-radius: var(--radius-md);
+  padding: 6px 8px;
+  font-size: 13px;
+  background: var(--color-text);
+  color: var(--color-dark);
+}
+.gpxDialogFilter:focus {
+  outline: none;
+  border-color: var(--color-dark);
+}
+
+.gpxDialogList {
+  flex: 1;
+  min-height: 120px;
+  max-height: 320px;
+  overflow-y: auto;
+  border: 1px solid var(--color-moss);
+  border-radius: var(--radius-md);
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-moss) transparent;
+}
+.gpxDialogList::-webkit-scrollbar { width: 7px; }
+.gpxDialogList::-webkit-scrollbar-track { background: transparent; }
+.gpxDialogList::-webkit-scrollbar-thumb {
+  background-color: var(--color-moss);
+  border-radius: 10px;
+}
+
+.gpxDialogItem {
+  padding: 6px 10px;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.gpxDialogItemUsed {
+  color: var(--color-moss);
+  font-weight: 500;
+}
+
+.gpxDialogItemSelected {
+  background-color: var(--color-moss);
+  color: var(--color-text);
+}
+.gpxDialogItemSelected.gpxDialogItemUsed {
+  color: #eaffea;
+}
+
+.gpxDialogEmpty {
+  padding: 10px;
+  font-size: 13px;
+  opacity: 0.6;
+  text-align: center;
+}
+
+.gpxDialogFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.gpxDialogBtn {
+  border: 1px solid var(--color-moss);
+  border-radius: var(--radius-md);
+  padding: 6px 14px;
+  font-size: 13px;
+  background: transparent;
+  color: var(--color-dark);
+  cursor: pointer;
+}
+.gpxDialogBtn:hover {
+  background-color: rgba(0, 0, 0, 0.06);
+}
+.gpxDialogBtnOk {
+  background-color: var(--color-moss);
+  color: var(--color-light);
+  border-color: var(--color-moss);
+}
+.gpxDialogBtnOk:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
