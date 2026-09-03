@@ -8,6 +8,8 @@ import { gpxToGeoJSON } from '../utils/gpxToGeojson';
 import { Tooltip } from 'react-tooltip';
 import { Icon } from '../assets/ikons/MapIcons';
 import ConfirmDialog from '../components/common/ConfirmDialog';
+import GpxDialog from '../components/hikingRoute/GpxDialog';
+import { downloadGpx } from '../services/supabase/storageGpx';
 
 export default function HikingRoute(){
     //Térképen kijelölt szakasz
@@ -24,28 +26,34 @@ export default function HikingRoute(){
     const { geojson, loading, setVisited, cutWay, undoLastEdit,
         syncToSupabase, pendingEditsCount, forceRefresh, addGpx } = useGeojson();
 
+
+    const usedGpxNames = geojson?.metadata?.gpxes?.map(g => g.name) ?? [];
+    const [gpxDialogOpen, setGpxDialogOpen] = useState(false);
     const [ gpxGeojson, setGpxGeojson] = useState(null);
+    const [gpxTime, setGpxTime] = useState(null);
 
     //Térképen kijelölt szakasz kibővítve a következő elágazásig!
     const { selectedWays, selectedRelations } = useSelectedWays(geojson, selectedFeatureId);
 
     const fileInputRef = useRef(null);
 
-    const handleGpxChange = async (event) => {
-        const file = event.target.files?.[0];
+    const handleGpxDialogSelect = async (fileName) => {
+        setGpxDialogOpen(false);
 
-        if (!file) return;
+        const gpx = await downloadGpx(fileName);
+        
+        const g = gpxToGeoJSON(gpx);
+        g.features[0].properties.name = fileName;
 
-        try {
-            const gpxText = await file.text();
-            const g = gpxToGeoJSON(gpxText);
-            g.features[0].properties.name = file.name;
+        setGpxGeojson(g);
 
-            setGpxGeojson(g);
-            
-        } catch (error) {
-            console.error('Hiba a GPX beolvasásakor:', error);
-        }
+        const gpxDate = new Date(
+            2000 + Number(fileName.slice(0, 2)),
+            Number(fileName.slice(2, 4)) - 1,
+            Number(fileName.slice(4, 6))
+        );
+console.log(gpxDate);
+        setGpxTime(gpxDate);
     };
 
     const handleGpxOk = () => {
@@ -56,6 +64,7 @@ export default function HikingRoute(){
 
     const handleClearGpx = () => {
         setGpxGeojson(null);
+        setGpxTime(new Date());
 
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
@@ -113,17 +122,10 @@ export default function HikingRoute(){
                             data-tooltip-id="hiking-tooltip"
                             data-tooltip-content="Visszavonás"
                         />
-                        <Icon name='route' scale={0.8} onClick={() => fileInputRef.current?.click()}
+                        <Icon name='route' scale={0.8} onClick={() => setGpxDialogOpen(true)}
                             color='#F2E7D5'
                             data-tooltip-id="hiking-tooltip"
                             data-tooltip-content="GPX betöltés"
-                        />
-                        <input
-                            ref={fileInputRef}
-                            type="file"
-                            accept=".gpx,application/gpx+xml"
-                            onChange={handleGpxChange}
-                            hidden
                         />
                         <Icon name='route_ok' scale={0.8}
                             onClick={() => 
@@ -188,6 +190,7 @@ export default function HikingRoute(){
                     <HikingRouteTable 
                         selectedWays={selectedWays}
                         selectedRelations={selectedRelations}
+                        gpxTime={gpxTime}
                         setSelectedWaysView={setSelectedWaysView}
                         onSetVisited={handleConfirmVisited}
                     />
@@ -222,6 +225,13 @@ export default function HikingRoute(){
                 confirmState?.onConfirm();
                 setConfirmState(null);
             }}
+        />
+
+        <GpxDialog
+            open={gpxDialogOpen}
+            onCancel={() => setGpxDialogOpen(false)}
+            onSelect={handleGpxDialogSelect}
+            usedFiles={usedGpxNames}
         />
         </>
     );

@@ -6,7 +6,7 @@ import logger from '../../utils/Logger';
 
 const log = logger.scope('HikingRouteTable');
 
-export default function HikingRouteTable({ selectedWays, selectedRelations, setSelectedWaysView, onSetVisited }) {
+export default function HikingRouteTable({ selectedWays, selectedRelations, gpxTime, setSelectedWaysView, onSetVisited }) {
 
   const [viewIds, setViewIds] = useState(new Set());
   const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().slice(0, 10));
@@ -31,6 +31,16 @@ export default function HikingRouteTable({ selectedWays, selectedRelations, setS
       : null
     );
   }, [selectedWays, viewIds, setSelectedWaysView]);
+
+  useEffect(() => {
+    if (!gpxTime) return;
+
+    const year = gpxTime.getFullYear();
+    const month = String(gpxTime.getMonth() + 1).padStart(2, '0');
+    const day = String(gpxTime.getDate()).padStart(2, '0');
+
+    setSelectedDate(`${year}-${month}-${day}`);
+  }, [gpxTime]);
 
   function handleRowClick(feature) {
     const id = feature.id;
