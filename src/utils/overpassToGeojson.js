@@ -86,7 +86,7 @@ function addWaysToMap(relationElement, waysMap) {
 			"properties": {
 				"type": "way",
 				"relations": [relationElement.id],
-				"distance": calculateDistanceWay(coordinates),
+				"length": calculateLengthWay(coordinates),
 				"visited": false,
 				"visitedDates": [],
 			},
@@ -110,7 +110,7 @@ function readWayGeo(member) {
 		.map((point) => [point.lon, point.lat]);
 }
 
-function calculateDistanceWay(coordinates) {
+function calculateLengthWay(coordinates) {
 	let distance = 0;
 	for (let i = 0; i < coordinates.length - 1; i++) {
 		distance += calculateDistanceCoord(coordinates[i], coordinates[i + 1]);

@@ -139,7 +139,7 @@ export function applyEdit(geojson, edit) {
             // ugyanaz a formázó logika, mint az injectIds-ben - nested vágásnál is
             // konzisztens marad (pl. "way123 (1.2)"), nincs string-konkatenációs duplázódás
             originalId: formatOriginalId(firstId),
-            distance: firstLength
+            length: firstLength
           },
           geometry: { type: 'LineString', coordinates: firstCoords }
         };
@@ -151,7 +151,7 @@ export function applyEdit(geojson, edit) {
             ...baseProps,
             uid: `${f.properties.uid}_b`,
             originalId: formatOriginalId(secondId),
-            distance: secondLength
+            length: secondLength
           },
           geometry: { type: 'LineString', coordinates: secondCoords }
         };

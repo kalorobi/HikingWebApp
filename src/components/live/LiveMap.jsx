@@ -149,19 +149,20 @@ export default function LiveMap({geojson, refress, auth}) {
       />
 
       {/* live pontok */}
-      <Layer id="live-points" type="circle"
-        minzoom={13}
-        filter={['has', 'mode']}
-        paint={{ 
-          'circle-radius': 4, 
-          'circle-color': [
-            'match',
-            ['get', 'mode'],
-            'hiking', '#3A8D60',
-            'car',    '#3D5A73',
-            '#3A8D60' // default
-          ] 
-        }}
+      <Layer
+        id="live-points-hiking"
+        type="circle"
+        minzoom={14}
+        filter={['==', ['get', 'mode'], 'hiking']}
+        paint={{ 'circle-radius': 4, 'circle-color': '#3A8D60' }}
+      />
+
+      <Layer
+        id="live-points-car"
+        type="circle"
+        minzoom={11}
+        filter={['==', ['get', 'mode'], 'car']}
+        paint={{ 'circle-radius': 4, 'circle-color': '#3D5A73' }}
       />
 
       <Layer id="live-labels" type="symbol"
@@ -171,7 +172,7 @@ export default function LiveMap({geojson, refress, auth}) {
         'text-field': ['get', 'timeLabel'],
         'text-size': {
           base: 1,
-          stops: [[13, 10], [16, 10], [20, 22]]
+          stops: [[12, 10], [16, 10], [20, 22]]
         },
         'text-anchor': 'bottom',
         'text-offset': [0, -0.8],

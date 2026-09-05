@@ -52,7 +52,7 @@ export default function HikingRoute(){
             Number(fileName.slice(2, 4)) - 1,
             Number(fileName.slice(4, 6))
         );
-console.log(gpxDate);
+
         setGpxTime(gpxDate);
     };
 
