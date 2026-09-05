@@ -148,7 +148,7 @@ function MapTableRow({ index, feature, isInView, visited, onRowClick }) {
       <td className={visited ? 'row-visited' : ''}>{index}</td>
       <td>{properties.originalId ?? '-'}</td>
       <td>
-        {(properties.distance / 1000).toLocaleString("hu-HU", {
+        {((properties.length ?? properties.distance) / 1000).toLocaleString("hu-HU", {
           minimumFractionDigits: 1,
           maximumFractionDigits: 2,
         })} km

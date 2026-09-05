@@ -15,7 +15,7 @@ import LivePlanRouter from './pages/LivePlanRouter';
 import LivePlanQueryProvider from './services/query/livePlanQuery/LivePlanQueryProvider';
 import LiveQueryProvider from './services/query/liveQuery/LiveQueryProvider';
 
-import TouristSignTest from './utils/TouristSign.Test';
+import GeoJsonCompare from './utils/GeojsonChecker';
 
 function App() {
   return (
@@ -35,7 +35,7 @@ function App() {
           <Route path="/hikingRoute" element={<HikingRoute />} />
           <Route path="/" element={<Home />} />
 
-          <Route path="/test" element={<TouristSignTest />} />
+          <Route path="/test" element={<GeoJsonCompare />} />
 
           <Route path="/login" element={<Login />} />
 

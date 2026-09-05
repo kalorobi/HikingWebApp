@@ -1,0 +1,450 @@
+/* =========================================================
+   GeoJSON COMPARE
+========================================================= */
+
+.geojson-compare {
+    width: 100%;
+    height: 100%;
+    padding: 22px;
+    box-sizing: border-box;
+    overflow: auto;
+
+    background: #4a2d20;
+    color: #f4ead7;
+
+    font-family: var(--font-body, sans-serif);
+}
+
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.geojson-compare-header {
+    margin-bottom: 22px;
+}
+
+.geojson-compare-header h2 {
+    margin: 0 0 18px;
+
+    color: #f5ead5;
+    font-size: 22px;
+    font-weight: 600;
+}
+
+
+/* =========================================================
+   FILE INPUTS
+========================================================= */
+
+.geojson-compare-files {
+    display: flex;
+    gap: 20px;
+}
+
+.geojson-compare-file {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+
+    color: #f4ead7;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.geojson-compare-file input {
+    max-width: 320px;
+
+    color: #f4ead7;
+}
+
+.geojson-compare-file small {
+    color: #d8c8b1;
+    font-size: 12px;
+}
+
+
+/* =========================================================
+   ERROR / EMPTY / SUCCESS
+========================================================= */
+
+.geojson-compare-error {
+    margin-bottom: 16px;
+    padding: 12px 15px;
+
+    color: #fff0ed;
+    background: #713a35;
+
+    border: 1px solid #a85c53;
+    border-radius: 7px;
+}
+
+.geojson-compare-empty,
+.geojson-compare-success {
+    padding: 30px;
+
+    text-align: center;
+    color: #f4ead7;
+
+    border: 1px solid #80604d;
+    border-radius: 8px;
+}
+
+.geojson-compare-success {
+    color: #dcebd9;
+    background: rgba(110, 145, 100, 0.18);
+    border-color: #718d68;
+}
+
+
+/* =========================================================
+   SUMMARY
+========================================================= */
+
+.geojson-compare-summary {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+
+    margin-bottom: 20px;
+
+    color: #f4ead7;
+    font-size: 16px;
+}
+
+.geojson-compare-summary strong {
+    color: #ffe5a9;
+    font-weight: 700;
+}
+
+
+/* =========================================================
+   TABLE
+========================================================= */
+
+.geojson-compare-table {
+    width: 100%;
+
+    overflow: hidden;
+
+    border: 1px solid #aa947d;
+    border-radius: 9px;
+
+    background: #4a2d20;
+}
+
+
+/* =========================================================
+   ROW
+========================================================= */
+
+.geojson-compare-row {
+    display: grid;
+
+    grid-template-columns:
+        minmax(300px, 1fr)
+        330px
+        minmax(300px, 1fr);
+
+    border-bottom: 1px solid rgba(220, 205, 183, 0.55);
+}
+
+.geojson-compare-row:last-child {
+    border-bottom: none;
+}
+
+
+/* =========================================================
+   TABLE HEADER
+========================================================= */
+
+.geojson-compare-row.header {
+    min-height: 48px;
+
+    background: #eeeae4;
+
+    color: #5a3929;
+
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.geojson-compare-row.header > div {
+    display: flex;
+    align-items: center;
+
+    padding: 0 15px;
+
+    border-right: 1px solid #c9c1b8;
+}
+
+.geojson-compare-row.header > div:last-child {
+    border-right: none;
+}
+
+
+/* =========================================================
+   CELLS
+========================================================= */
+
+.geojson-compare-cell {
+    min-width: 0;
+    padding: 4px;
+
+    color: #f4ead7;
+
+    border-right: 1px solid rgba(220, 205, 183, 0.55);
+}
+
+.geojson-compare-cell:last-child {
+    border-right: none;
+}
+
+
+/* =========================================================
+   FEATURE TYPE + ID
+========================================================= */
+
+.geojson-compare-id {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+
+    margin-bottom: 13px;
+}
+
+.geojson-compare-id strong {
+    color: #fff3df;
+
+    font-size: 17px;
+    font-weight: 700;
+}
+
+.geojson-compare-id span {
+    color: #dfd0bd;
+
+    font-family: monospace;
+    font-size: 13px;
+}
+
+
+/* =========================================================
+   VALUES
+========================================================= */
+
+.geojson-compare-values {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.geojson-compare-value {
+    display: inline-flex;
+    align-items: center;
+
+    padding: 2px 2px;
+
+    color: #51382b;
+    background: #f1eee9;
+
+    border: 1px solid #e1dcd5;
+    border-radius: 6px;
+
+    font-family: monospace;
+    font-size: 13px;
+    line-height: 1;
+}
+
+
+/* =========================================================
+   DIFFERENT VALUE
+========================================================= */
+
+.geojson-compare-value.different {
+    color: #8b2632;
+    background: #f6b7bd;
+
+    border-color: #e38c95;
+}
+
+
+/* =========================================================
+   MISSING
+========================================================= */
+
+.geojson-compare-missing {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+
+    padding: 8px 0;
+
+    color: #aa9784;
+    font-size: 13px;
+}
+
+.geojson-compare-missing span:first-child {
+    font-size: 18px;
+}
+
+
+/* =========================================================
+   ONLY A / ONLY B
+========================================================= */
+
+.geojson-compare-row.onlyA
+    .geojson-compare-cell:first-child,
+
+.geojson-compare-row.onlyB
+    .geojson-compare-cell:last-child {
+    background: rgba(125, 65, 52, 0.18);
+}
+
+
+/* =========================================================
+   DIFF COLUMN
+========================================================= */
+
+.geojson-compare-diff {
+    min-width: 0;
+    padding: 4px;
+
+    color: #5b3928;
+    background: #f1eee9;
+
+    border-right: 1px solid #c9c1b8;
+
+    font-size: 13px;
+}
+
+.geojson-compare-diff strong {
+    display: block;
+
+    margin-bottom: 7px;
+
+    color: #936021;
+
+    font-size: 14px;
+    font-weight: 700;
+}
+
+
+/* =========================================================
+   DIFF LABEL
+========================================================= */
+
+.diff-label {
+    display: inline-flex;
+    align-items: center;
+
+    padding: 7px 10px;
+
+    border-radius: 5px;
+
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.diff-label.only-a {
+    color: #8b2632;
+    background: #f6b7bd;
+}
+
+.diff-label.only-b {
+    color: #315d38;
+    background: #cfe6d1;
+}
+
+
+/* =========================================================
+   DIFF VALUES
+========================================================= */
+
+.diff-values {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    margin-bottom: 12px;
+
+    font-family: monospace;
+    font-size: 13px;
+}
+
+.diff-values span {
+    display: block;
+
+    padding: 3px 0;
+
+    color: #315d38;
+}
+
+
+/* =========================================================
+   CHANGED ROW
+========================================================= */
+
+.geojson-compare-row.changed
+    .geojson-compare-diff {
+    background: #f1eee9;
+}
+
+
+/* =========================================================
+   ONLY ROWS
+========================================================= */
+
+.geojson-compare-row.onlyA
+    .geojson-compare-diff,
+
+.geojson-compare-row.onlyB
+    .geojson-compare-diff {
+    background: #f1eee9;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 1000px) {
+    .geojson-compare-row {
+        grid-template-columns:
+            minmax(220px, 1fr)
+            250px
+            minmax(220px, 1fr);
+    }
+
+    .geojson-compare {
+        padding: 15px;
+    }
+}
+
+@media (max-width: 750px) {
+    .geojson-compare-files {
+        flex-direction: column;
+    }
+
+    .geojson-compare-summary {
+        flex-wrap: wrap;
+        gap: 12px 20px;
+    }
+
+    .geojson-compare-row {
+        grid-template-columns: 1fr;
+    }
+
+    .geojson-compare-row.header {
+        display: none;
+    }
+
+    .geojson-compare-cell {
+        border-right: none;
+        border-bottom: 1px solid rgba(220, 205, 183, 0.4);
+    }
+
+    .geojson-compare-diff {
+        border-right: none;
+        border-bottom: 1px solid #c9c1b8;
+    }
+}
