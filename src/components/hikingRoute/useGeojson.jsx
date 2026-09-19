@@ -163,6 +163,7 @@ export function useGeojson() {
       // frissen letöltjük a szerver AKTUÁLIS állapotát. Enélkül, ha időközben más felhasználó
       // is feltöltött, az ő munkája csendben felülíródna a mi feltöltésünkkel (a Storage-alapú
       // "egész fájlt felülírjuk" mechanizmus miatt nincs automatikus merge a szerver oldalán).
+      setLoading(true);
       log.debug('fresh base download sync elott');
       const rawFreshBase = await downloadGeojson();
       const freshBase = injectIds(rawFreshBase); // uid/originalId újraszámolása a friss állapotra
@@ -202,6 +203,7 @@ export function useGeojson() {
       setEdits((prev) => prev.filter((e) => !syncedLocalIds.includes(e.localId)));
     } finally {
       syncingRef.current = false;
+      setLoading(false);
     }
   }, [baseGeojson, edits]);
 

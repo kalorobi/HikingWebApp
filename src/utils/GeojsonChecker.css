@@ -1,12 +1,14 @@
 /* =========================================================
-   GeoJSON COMPARE
+   GEOJSON COMPARE
 ========================================================= */
 
 .geojson-compare {
     width: 100%;
     height: 100%;
+
     padding: 22px;
     box-sizing: border-box;
+
     overflow: auto;
 
     background: #4a2d20;
@@ -28,6 +30,7 @@
     margin: 0 0 18px;
 
     color: #f5ead5;
+
     font-size: 22px;
     font-weight: 600;
 }
@@ -48,6 +51,7 @@
     gap: 7px;
 
     color: #f4ead7;
+
     font-size: 14px;
     font-weight: 500;
 }
@@ -60,6 +64,7 @@
 
 .geojson-compare-file small {
     color: #d8c8b1;
+
     font-size: 12px;
 }
 
@@ -84,6 +89,7 @@
     padding: 30px;
 
     text-align: center;
+
     color: #f4ead7;
 
     border: 1px solid #80604d;
@@ -93,6 +99,7 @@
 .geojson-compare-success {
     color: #dcebd9;
     background: rgba(110, 145, 100, 0.18);
+
     border-color: #718d68;
 }
 
@@ -109,11 +116,13 @@
     margin-bottom: 20px;
 
     color: #f4ead7;
+
     font-size: 16px;
 }
 
 .geojson-compare-summary strong {
     color: #ffe5a9;
+
     font-weight: 700;
 }
 
@@ -159,7 +168,7 @@
 ========================================================= */
 
 .geojson-compare-row.header {
-    min-height: 48px;
+    min-height: 52px;
 
     background: #eeeae4;
 
@@ -173,7 +182,7 @@
     display: flex;
     align-items: center;
 
-    padding: 0 15px;
+    padding: 8px 15px;
 
     border-right: 1px solid #c9c1b8;
 }
@@ -184,12 +193,65 @@
 
 
 /* =========================================================
+   DIFF HEADER
+========================================================= */
+
+.geojson-compare-diff-header {
+    display: flex !important;
+
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 10px;
+
+    width: 100%;
+}
+
+
+/* =========================================================
+   FILTER
+========================================================= */
+
+.geojson-compare-filter {
+    min-width: 125px;
+
+    padding: 6px 25px 6px 9px;
+
+    color: #5a3929;
+    background: #ffffff;
+
+    border: 1px solid #c9c1b8;
+    border-radius: 5px;
+
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 500;
+
+    cursor: pointer;
+}
+
+.geojson-compare-filter:hover {
+    border-color: #9b806a;
+}
+
+.geojson-compare-filter:focus {
+    outline: none;
+
+    border-color: #80604d;
+
+    box-shadow:
+        0 0 0 2px rgba(128, 96, 77, 0.15);
+}
+
+
+/* =========================================================
    CELLS
 ========================================================= */
 
 .geojson-compare-cell {
     min-width: 0;
-    padding: 4px;
+
+    padding: 16px;
 
     color: #f4ead7;
 
@@ -242,7 +304,7 @@
     display: inline-flex;
     align-items: center;
 
-    padding: 2px 2px;
+    padding: 8px 11px;
 
     color: #51382b;
     background: #f1eee9;
@@ -252,6 +314,7 @@
 
     font-family: monospace;
     font-size: 13px;
+
     line-height: 1;
 }
 
@@ -280,6 +343,7 @@
     padding: 8px 0;
 
     color: #aa9784;
+
     font-size: 13px;
 }
 
@@ -293,11 +357,13 @@
 ========================================================= */
 
 .geojson-compare-row.onlyA
-    .geojson-compare-cell:first-child,
+    .geojson-compare-cell:first-child {
+    background: rgba(125, 65, 52, 0.18);
+}
 
 .geojson-compare-row.onlyB
     .geojson-compare-cell:last-child {
-    background: rgba(125, 65, 52, 0.18);
+    background: rgba(70, 90, 125, 0.18);
 }
 
 
@@ -307,7 +373,8 @@
 
 .geojson-compare-diff {
     min-width: 0;
-    padding: 4px;
+
+    padding: 16px;
 
     color: #5b3928;
     background: #f1eee9;
@@ -404,10 +471,27 @@
 
 
 /* =========================================================
+   NO FILTER RESULT
+========================================================= */
+
+.geojson-compare-no-filter-result {
+    padding: 30px;
+
+    color: #6c5749;
+    background: #f1eee9;
+
+    text-align: center;
+
+    font-size: 14px;
+}
+
+
+/* =========================================================
    RESPONSIVE
 ========================================================= */
 
 @media (max-width: 1000px) {
+
     .geojson-compare-row {
         grid-template-columns:
             minmax(220px, 1fr)
@@ -420,31 +504,43 @@
     }
 }
 
+
 @media (max-width: 750px) {
+
     .geojson-compare-files {
         flex-direction: column;
     }
 
+
     .geojson-compare-summary {
         flex-wrap: wrap;
+
         gap: 12px 20px;
     }
+
 
     .geojson-compare-row {
         grid-template-columns: 1fr;
     }
 
+
     .geojson-compare-row.header {
         display: none;
     }
 
+
     .geojson-compare-cell {
         border-right: none;
-        border-bottom: 1px solid rgba(220, 205, 183, 0.4);
+
+        border-bottom:
+            1px solid rgba(220, 205, 183, 0.4);
     }
+
 
     .geojson-compare-diff {
         border-right: none;
+
         border-bottom: 1px solid #c9c1b8;
     }
+
 }

@@ -10,9 +10,17 @@ const GeoJsonCompare = () => {
 
     const [error, setError] = useState('');
 
-    // ---------------------------------------------------------
-    // GeoJSON betöltése
-    // ---------------------------------------------------------
+    // Szűrő:
+    // all     = minden eltérés
+    // onlyA   = csak A-ban van
+    // onlyB   = csak B-ben van
+    // changed = mindkettőben megvan, de eltér
+    const [diffFilter, setDiffFilter] = useState('all');
+
+
+    // =========================================================
+    // GEOJSON BETÖLTÉSE
+    // =========================================================
 
     const handleFile = (file, side) => {
         if (!file) return;
@@ -29,7 +37,9 @@ const GeoJsonCompare = () => {
                     data.type !== 'FeatureCollection' ||
                     !Array.isArray(data.features)
                 ) {
-                    throw new Error('A fájl nem érvényes GeoJSON FeatureCollection.');
+                    throw new Error(
+                        'A fájl nem érvényes GeoJSON FeatureCollection.'
+                    );
                 }
 
                 if (side === 'A') {
@@ -51,17 +61,20 @@ const GeoJsonCompare = () => {
         reader.readAsText(file);
     };
 
+
     const handleFileA = (event) => {
         handleFile(event.target.files[0], 'A');
     };
+
 
     const handleFileB = (event) => {
         handleFile(event.target.files[0], 'B');
     };
 
-    // ---------------------------------------------------------
-    // Tömb összehasonlítás
-    // ---------------------------------------------------------
+
+    // =========================================================
+    // TÖMBÖK ÖSSZEHASONLÍTÁSA
+    // =========================================================
 
     const getArrayDiff = (arrayA = [], arrayB = []) => {
         const a = new Set(arrayA.map(String));
@@ -73,9 +86,10 @@ const GeoJsonCompare = () => {
         };
     };
 
-    // ---------------------------------------------------------
-    // Feature összehasonlítás
-    // ---------------------------------------------------------
+
+    // =========================================================
+    // FEATURE-ÖK ÖSSZEHASONLÍTÁSA
+    // =========================================================
 
     const compareFeatures = useMemo(() => {
         if (!geojsonA || !geojsonB) {
@@ -94,39 +108,54 @@ const GeoJsonCompare = () => {
                 feature.geometry?.type === 'LineString'
         );
 
+
         /*
-         * Külön Map a Polygon és LineString feature-öknek.
+         * Map használata miatt az ID keresése O(1).
          *
-         * A kulcs:
-         * geometry.type + id
+         * A geometry type is része a kulcsnak, így például:
+         *
+         * Polygon:123
+         *
+         * és
+         *
+         * LineString:123
+         *
+         * külön feature-nek számít.
          */
+
         const mapA = new Map();
         const mapB = new Map();
+
 
         featuresA.forEach((feature) => {
             const key = `${feature.geometry.type}:${feature.id}`;
             mapA.set(key, feature);
         });
 
+
         featuresB.forEach((feature) => {
             const key = `${feature.geometry.type}:${feature.id}`;
             mapB.set(key, feature);
         });
+
 
         const keys = new Set([
             ...mapA.keys(),
             ...mapB.keys(),
         ]);
 
+
         const differences = [];
+
 
         keys.forEach((key) => {
             const featureA = mapA.get(key);
             const featureB = mapB.get(key);
 
-            // ---------------------------------------------
-            // Csak A-ban van
-            // ---------------------------------------------
+
+            // -------------------------------------------------
+            // CSAK A-BAN VAN
+            // -------------------------------------------------
 
             if (featureA && !featureB) {
                 differences.push({
@@ -142,9 +171,10 @@ const GeoJsonCompare = () => {
                 return;
             }
 
-            // ---------------------------------------------
-            // Csak B-ben van
-            // ---------------------------------------------
+
+            // -------------------------------------------------
+            // CSAK B-BEN VAN
+            // -------------------------------------------------
 
             if (!featureA && featureB) {
                 differences.push({
@@ -160,23 +190,31 @@ const GeoJsonCompare = () => {
                 return;
             }
 
-            // ---------------------------------------------
-            // Mindkettőben van
-            // ---------------------------------------------
+
+            // -------------------------------------------------
+            // MINDKETTŐBEN MEGVAN
+            // -------------------------------------------------
 
             const propertyName =
                 featureA.geometry.type === 'Polygon'
                     ? 'ways'
                     : 'relations';
 
-            const arrayA = featureA.properties?.[propertyName] ?? [];
-            const arrayB = featureB.properties?.[propertyName] ?? [];
+
+            const arrayA =
+                featureA.properties?.[propertyName] ?? [];
+
+            const arrayB =
+                featureB.properties?.[propertyName] ?? [];
+
 
             const diff = getArrayDiff(arrayA, arrayB);
+
 
             const hasDifference =
                 diff.onlyA.length > 0 ||
                 diff.onlyB.length > 0;
+
 
             if (hasDifference) {
                 differences.push({
@@ -192,7 +230,11 @@ const GeoJsonCompare = () => {
             }
         });
 
-        // Típus, majd ID szerint rendezzük
+
+        // -----------------------------------------------------
+        // RENDEZÉS
+        // -----------------------------------------------------
+
         differences.sort((a, b) => {
             if (a.type !== b.type) {
                 return a.type.localeCompare(b.type);
@@ -201,16 +243,64 @@ const GeoJsonCompare = () => {
             return String(a.id).localeCompare(
                 String(b.id),
                 undefined,
-                { numeric: true }
+                {
+                    numeric: true,
+                }
             );
         });
+
 
         return differences;
     }, [geojsonA, geojsonB]);
 
-    // ---------------------------------------------------------
-    // Egy oldal tartalma
-    // ---------------------------------------------------------
+
+    // =========================================================
+    // SZŰRT EREDMÉNY
+    // =========================================================
+
+    const filteredDifferences = useMemo(() => {
+        return compareFeatures.filter((item) => {
+
+            if (diffFilter === 'all') {
+                return true;
+            }
+
+
+            if (diffFilter === 'onlyA') {
+                return (
+                    item.status === 'onlyA' ||
+                    (
+                        item.status === 'changed' &&
+                        item.diff.onlyA.length > 0
+                    )
+                );
+            }
+
+
+            if (diffFilter === 'onlyB') {
+                return (
+                    item.status === 'onlyB' ||
+                    (
+                        item.status === 'changed' &&
+                        item.diff.onlyB.length > 0
+                    )
+                );
+            }
+
+
+            if (diffFilter === 'changed') {
+                return item.status === 'changed';
+            }
+
+
+            return true;
+        });
+    }, [compareFeatures, diffFilter]);
+
+
+    // =========================================================
+    // EGY FEATURE MEGJELENÍTÉSE
+    // =========================================================
 
     const renderFeature = (item, side) => {
         const feature =
@@ -218,7 +308,11 @@ const GeoJsonCompare = () => {
                 ? item.featureA
                 : item.featureB;
 
-        // Nincs ezen az oldalon
+
+        // -----------------------------------------------------
+        // NINCS AZ ADOTT GEOJSON-BAN
+        // -----------------------------------------------------
+
         if (!feature) {
             return (
                 <div className="geojson-compare-missing">
@@ -228,22 +322,30 @@ const GeoJsonCompare = () => {
             );
         }
 
+
         const propertyName =
             item.type === 'Polygon'
                 ? 'ways'
                 : 'relations';
 
+
         const values =
             feature.properties?.[propertyName] ?? [];
 
-        // Csak ebben az oldalon szerepel
+
+        // -----------------------------------------------------
+        // CSAK EBBEN A GEOJSON-BAN VAN
+        // -----------------------------------------------------
+
         if (
             (item.status === 'onlyA' && side === 'A') ||
             (item.status === 'onlyB' && side === 'B')
         ) {
             return (
                 <div className="geojson-compare-feature only">
+
                     <div className="geojson-compare-values">
+
                         {values.length > 0
                             ? values.map((value) => (
                                 <span
@@ -253,29 +355,43 @@ const GeoJsonCompare = () => {
                                     {String(value)}
                                 </span>
                             ))
-                            : <span>üres</span>
+                            : (
+                                <span>üres</span>
+                            )
                         }
+
                     </div>
+
                 </div>
             );
         }
 
-        // Megváltozott feature
+
+        // -----------------------------------------------------
+        // MÓDOSULT FEATURE
+        // -----------------------------------------------------
+
         if (item.status === 'changed') {
+
             const differentValues =
                 side === 'A'
                     ? item.diff.onlyA
                     : item.diff.onlyB;
 
+
             return (
                 <div className="geojson-compare-feature changed">
+
                     <div className="geojson-compare-values">
+
                         {values.length > 0
                             ? values.map((value) => {
+
                                 const isDifferent =
                                     differentValues.includes(
                                         String(value)
                                     );
+
 
                                 return (
                                     <span
@@ -290,30 +406,47 @@ const GeoJsonCompare = () => {
                                     </span>
                                 );
                             })
-                            : <span>üres</span>
+                            : (
+                                <span>üres</span>
+                            )
                         }
+
                     </div>
+
                 </div>
             );
         }
 
+
         return null;
     };
 
-    // ---------------------------------------------------------
-    // Render
-    // ---------------------------------------------------------
+
+    // =========================================================
+    // RENDER
+    // =========================================================
 
     return (
         <div className="geojson-compare">
 
+            {/* =================================================
+                HEADER
+            ================================================= */}
+
             <div className="geojson-compare-header">
-                <h2>GeoJSON összehasonlítás</h2>
+
+                <h2>
+                    GeoJSON összehasonlítás
+                </h2>
+
 
                 <div className="geojson-compare-files">
 
                     <label className="geojson-compare-file">
-                        <span>GeoJSON A</span>
+
+                        <span>
+                            GeoJSON A
+                        </span>
 
                         <input
                             type="file"
@@ -322,12 +455,19 @@ const GeoJsonCompare = () => {
                         />
 
                         {fileNameA && (
-                            <small>{fileNameA}</small>
+                            <small>
+                                {fileNameA}
+                            </small>
                         )}
+
                     </label>
 
+
                     <label className="geojson-compare-file">
-                        <span>GeoJSON B</span>
+
+                        <span>
+                            GeoJSON B
+                        </span>
 
                         <input
                             type="file"
@@ -336,12 +476,21 @@ const GeoJsonCompare = () => {
                         />
 
                         {fileNameB && (
-                            <small>{fileNameB}</small>
+                            <small>
+                                {fileNameB}
+                            </small>
                         )}
+
                     </label>
 
                 </div>
+
             </div>
+
+
+            {/* =================================================
+                HIBA
+            ================================================= */}
 
             {error && (
                 <div className="geojson-compare-error">
@@ -349,171 +498,321 @@ const GeoJsonCompare = () => {
                 </div>
             )}
 
+
+            {/* =================================================
+                AMÍG NINCS MINDKÉT FÁJL
+            ================================================= */}
+
             {!geojsonA || !geojsonB ? (
+
                 <div className="geojson-compare-empty">
                     Töltsd be mindkét GeoJSON fájlt az összehasonlításhoz.
                 </div>
+
             ) : (
+
                 <>
+
+                    {/* =============================================
+                        ÖSSZESÍTÉS
+                    ============================================= */}
+
                     <div className="geojson-compare-summary">
+
                         <span>
-                            Összes eltérés: <strong>{compareFeatures.length}</strong>
+                            Összes eltérés:{' '}
+                            <strong>
+                                {compareFeatures.length}
+                            </strong>
                         </span>
+
+
+                        {diffFilter !== 'all' && (
+                            <span>
+                                Megjelenítve:{' '}
+                                <strong>
+                                    {filteredDifferences.length}
+                                </strong>
+                            </span>
+                        )}
+
 
                         <span>
                             Polygon:{' '}
                             <strong>
                                 {
-                                    compareFeatures.filter(
-                                        (item) => item.type === 'Polygon'
+                                    filteredDifferences.filter(
+                                        (item) =>
+                                            item.type === 'Polygon'
                                     ).length
                                 }
                             </strong>
                         </span>
 
+
                         <span>
                             LineString:{' '}
                             <strong>
                                 {
-                                    compareFeatures.filter(
-                                        (item) => item.type === 'LineString'
+                                    filteredDifferences.filter(
+                                        (item) =>
+                                            item.type === 'LineString'
                                     ).length
                                 }
-                                </strong>
-                            </span>
+                            </strong>
+                        </span>
+
                     </div>
 
+
+                    {/* =============================================
+                        NINCS ELTÉRÉS
+                    ============================================= */}
+
                     {compareFeatures.length === 0 ? (
+
                         <div className="geojson-compare-success">
                             A két GeoJSON tartalma megegyezik.
                         </div>
+
                     ) : (
+
                         <div className="geojson-compare-table">
 
-                            {/* FEJLÉC */}
+                            {/* =====================================
+                                TÁBLÁZAT FEJLÉC
+                            ===================================== */}
 
                             <div className="geojson-compare-row header">
+
                                 <div>
                                     GeoJSON A
                                 </div>
 
-                                <div>
-                                    Eltérés
+
+                                <div className="geojson-compare-diff-header">
+
+                                    <span>
+                                        Eltérés
+                                    </span>
+
+
+                                    <select
+                                        value={diffFilter}
+                                        onChange={(event) =>
+                                            setDiffFilter(
+                                                event.target.value
+                                            )
+                                        }
+                                        className="geojson-compare-filter"
+                                    >
+
+                                        <option value="all">
+                                            Összes
+                                        </option>
+
+                                        <option value="onlyA">
+                                            A-ban van
+                                        </option>
+
+                                        <option value="onlyB">
+                                            B-ben van
+                                        </option>
+
+                                        <option value="changed">
+                                            Eltérő
+                                        </option>
+
+                                    </select>
+
                                 </div>
+
 
                                 <div>
                                     GeoJSON B
                                 </div>
+
                             </div>
 
-                            {/* SOROK */}
 
-                            {compareFeatures.map((item) => (
-                                <div
-                                    key={item.key}
-                                    className={`geojson-compare-row ${item.status}`}
-                                >
+                            {/* =====================================
+                                SZŰRT SOROK
+                            ===================================== */}
 
-                                    {/* A */}
+                            {filteredDifferences.length === 0 ? (
 
-                                    <div className="geojson-compare-cell">
-
-                                        <div className="geojson-compare-id">
-                                            <strong>
-                                                {item.type}
-                                            </strong>
-
-                                            <span>
-                                                id: {String(item.id)}
-                                            </span>
-                                        </div>
-
-                                        {renderFeature(item, 'A')}
-
-                                    </div>
-
-                                    {/* KÖZÉPSŐ DIFF */}
-
-                                    <div className="geojson-compare-diff">
-
-                                        {item.status === 'onlyA' && (
-                                            <span className="diff-label only-a">
-                                                Csak A-ban
-                                            </span>
-                                        )}
-
-                                        {item.status === 'onlyB' && (
-                                            <span className="diff-label only-b">
-                                                Csak B-ben
-                                            </span>
-                                        )}
-
-                                        {item.status === 'changed' && (
-                                            <>
-                                                {item.diff.onlyA.length > 0 && (
-                                                    <div>
-                                                        <strong>A-ban van:</strong>
-
-                                                        <div className="diff-values">
-                                                            {item.diff.onlyA.map(
-                                                                (value) => (
-                                                                    <span key={value}>
-                                                                        {value}
-                                                                    </span>
-                                                                )
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                )}
-
-                                                {item.diff.onlyB.length > 0 && (
-                                                    <div>
-                                                        <strong>B-ben van:</strong>
-
-                                                        <div className="diff-values">
-                                                            {item.diff.onlyB.map(
-                                                                (value) => (
-                                                                    <span key={value}>
-                                                                        {value}
-                                                                    </span>
-                                                                )
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                )}
-                                            </>
-                                        )}
-
-                                    </div>
-
-                                    {/* B */}
-
-                                    <div className="geojson-compare-cell">
-
-                                        <div className="geojson-compare-id">
-                                            <strong>
-                                                {item.type}
-                                            </strong>
-
-                                            <span>
-                                                id: {String(item.id)}
-                                            </span>
-                                        </div>
-
-                                        {renderFeature(item, 'B')}
-
-                                    </div>
-
+                                <div className="geojson-compare-no-filter-result">
+                                    Nincs a szűrőnek megfelelő eltérés.
                                 </div>
-                            ))}
+
+                            ) : (
+
+                                filteredDifferences.map((item) => (
+
+                                    <div
+                                        key={item.key}
+                                        className={`geojson-compare-row ${item.status}`}
+                                    >
+
+                                        {/* =========================
+                                            A OLDAL
+                                        ========================= */}
+
+                                        <div className="geojson-compare-cell">
+
+                                            <div className="geojson-compare-id">
+
+                                                <strong>
+                                                    {item.type}
+                                                </strong>
+
+                                                <span>
+                                                    id: {String(item.id)}
+                                                </span>
+
+                                            </div>
+
+
+                                            {renderFeature(
+                                                item,
+                                                'A'
+                                            )}
+
+                                        </div>
+
+
+                                        {/* =========================
+                                            KÖZÉPSŐ DIFF
+                                        ========================= */}
+
+                                        <div className="geojson-compare-diff">
+
+                                            {item.status === 'onlyA' && (
+
+                                                <span className="diff-label only-a">
+                                                    Csak A-ban
+                                                </span>
+
+                                            )}
+
+
+                                            {item.status === 'onlyB' && (
+
+                                                <span className="diff-label only-b">
+                                                    Csak B-ben
+                                                </span>
+
+                                            )}
+
+
+                                            {item.status === 'changed' && (
+
+                                                <>
+
+                                                    {item.diff.onlyA.length > 0 && (
+
+                                                        <div>
+
+                                                            <strong>
+                                                                A-ban van:
+                                                            </strong>
+
+
+                                                            <div className="diff-values">
+
+                                                                {item.diff.onlyA.map(
+                                                                    (value) => (
+
+                                                                        <span key={value}>
+                                                                            {value}
+                                                                        </span>
+
+                                                                    )
+                                                                )}
+
+                                                            </div>
+
+                                                        </div>
+
+                                                    )}
+
+
+                                                    {item.diff.onlyB.length > 0 && (
+
+                                                        <div>
+
+                                                            <strong>
+                                                                B-ben van:
+                                                            </strong>
+
+
+                                                            <div className="diff-values">
+
+                                                                {item.diff.onlyB.map(
+                                                                    (value) => (
+
+                                                                        <span key={value}>
+                                                                            {value}
+                                                                        </span>
+
+                                                                    )
+                                                                )}
+
+                                                            </div>
+
+                                                        </div>
+
+                                                    )}
+
+                                                </>
+
+                                            )}
+
+                                        </div>
+
+
+                                        {/* =========================
+                                            B OLDAL
+                                        ========================= */}
+
+                                        <div className="geojson-compare-cell">
+
+                                            <div className="geojson-compare-id">
+
+                                                <strong>
+                                                    {item.type}
+                                                </strong>
+
+                                                <span>
+                                                    id: {String(item.id)}
+                                                </span>
+
+                                            </div>
+
+
+                                            {renderFeature(
+                                                item,
+                                                'B'
+                                            )}
+
+                                        </div>
+
+                                    </div>
+
+                                ))
+                            )}
 
                         </div>
+
                     )}
+
                 </>
+
             )}
 
         </div>
     );
 };
+
 
 export default GeoJsonCompare;

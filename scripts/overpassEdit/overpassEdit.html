@@ -48,6 +48,7 @@ var colorFilter = {"K" : true, "P" : true, "Z" : true, "S" : true, "E" : true};
 var geoLayer = L.geoJSON();
 var markerLayer = L.featureGroup();
 var markerLayer2 = L.featureGroup();
+var allWaysLayer = L.geoJSON(); // háttérréteg: az összes way mindig látszik
 const ONLINE_MAPS = [
 {"map" : "https://{s}.tile.openstreetmap.hu/tt/{z}/{x}/{y}.png", "name":"turistautak","zoom" : 16},
 ];
@@ -80,6 +81,7 @@ document.getElementById('overpass').addEventListener('change' , function(event) 
 
 			fileInfo(selectedFile);
 			fillTable();
+			showAllWays();
 //TODO way center way clean!
 			//relationCenter();
         };
@@ -106,6 +108,7 @@ if(f.properties.type === 'way'){
 			
 			fileInfo(selectedFile);
 			fillTable();
+			showAllWays();
         };
 		reader.readAsText(selectedFile);
     }
@@ -246,9 +249,34 @@ function modifyRelation() {
 //TODO modify relation
 		actRelation.properties.dirty = newDirty;
 		actRelation.properties.name = newRelationName;
+		actWays.features.forEach((way) => {
+			way.properties.dirty = newDirty;
+		});
 		addConsole("Modify relation: " + id);
 	}
 	fillTable();
+	showAllWays();
+}
+//****************ÚJ FUNKCIÓ: teljes hálózat háttérrétegként*******************************
+function showAllWays(){
+	if(map.hasLayer(allWaysLayer)){ map.removeLayer(allWaysLayer); }
+	allWaysLayer = L.geoJSON(geoJson, {
+		filter: function(feature){
+			return feature.geometry && feature.geometry.type === "LineString";
+		},
+		style: function(feature){
+			if(feature.properties.dirty){
+				return {color: 'firebrick', weight: 2, opacity: 0.7, lineCap: 'round', lineJoin: 'round'};
+			}
+			return {color: 'darkgreen', weight: 2, opacity: 0.5, lineCap: 'round', lineJoin: 'round'};
+		},
+		onEachFeature: function(feature, layer){
+			const relations = (feature.properties.relations || []).join(", ");
+			layer.bindTooltip(relations, {sticky: true});
+		}
+	});
+	allWaysLayer.addTo(map);
+	allWaysLayer.bringToBack();
 }
 function viewMap(options){
 	geoLayer.clearLayers();
@@ -262,6 +290,9 @@ function viewMap(options){
 			else{return{color: '#3388ff', weight: 3, opacity: 1, lineCap: 'round', lineJoin: 'round'};}
 		}
 	}).addTo(map);
+
+	if(map.hasLayer(allWaysLayer)){ allWaysLayer.bringToBack(); }
+
 	if(options){
 		if(options.fitBounds){map.fitBounds(geoLayer.getBounds());}
 		if(options.wayId){
@@ -324,22 +355,34 @@ map.on('zoomend', function() {
 	}
 });
 function delRelation(relId) {
-	const id = relId;
-	geoJson.features = geoJson.features.filter(feature => feature.id !== id);
-	geoJson.features.forEach((feature, index) => {
-		if(feature.properties.type === 'way'){
-			feature.properties.relations.forEach((rel) => {
-				if(rel === id){
-				feature.properties.relations = feature.properties.relations.filter(rel => rel !== id);
-				}
-			});
-		}
-	});
-	addConsole("Relation DEL: " + id);
-	geoLayer.clearLayers();
-	markerLayer.clearLayers();
-	markerLayer = L.featureGroup();
-	fillTable();
+    const id = relId;
+
+    // Relation törlése
+    geoJson.features = geoJson.features.filter(
+        feature => feature.id !== id
+    );
+
+    // Way-ek frissítése
+    geoJson.features = geoJson.features.filter(feature => {
+        if (feature.properties.type !== 'way') {
+            return true;
+        }
+
+        // Az aktuális relation törlése a relations tömbből
+        feature.properties.relations =
+            feature.properties.relations.filter(rel => rel !== id);
+
+        // Ha nem maradt relation, a way is törlendő
+        return feature.properties.relations.length > 0;
+    });
+
+    addConsole("Relation DEL: " + id);
+
+    geoLayer.clearLayers();
+    markerLayer.clearLayers();
+    markerLayer = L.featureGroup();
+
+    fillTable();
 }
 function delWay(id){
 	let delRef = false;
