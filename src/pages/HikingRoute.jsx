@@ -10,6 +10,7 @@ import { Icon } from '../assets/ikons/MapIcons';
 import ConfirmDialog from '../components/common/ConfirmDialog';
 import GpxDialog from '../components/hikingRoute/GpxDialog';
 import { downloadGpx } from '../services/supabase/storageGpx';
+import LoadingOverlay from '../components/common/LoadingOverlay';
 
 export default function HikingRoute(){
     //Térképen kijelölt szakasz
@@ -29,7 +30,7 @@ export default function HikingRoute(){
 
     const usedGpxNames = geojson?.metadata?.gpxes?.map(g => g.name) ?? [];
     const [gpxDialogOpen, setGpxDialogOpen] = useState(false);
-    const [ gpxGeojson, setGpxGeojson] = useState(null);
+    const [gpxGeojson, setGpxGeojson] = useState(null);
     const [gpxTime, setGpxTime] = useState(null);
 
     //Térképen kijelölt szakasz kibővítve a következő elágazásig!
@@ -94,7 +95,6 @@ export default function HikingRoute(){
 
     }, [selectedWaysView, setVisited]);
 
-    if (loading) return <div>Betöltés...</div>;
     return(
         <>
         <div className='hikingBox'>
@@ -198,7 +198,7 @@ export default function HikingRoute(){
                 </div>
             </div>
             <div className='hikingFooter'>
-                <span>Letöltött geojson: {geojson.metadata.created_at.slice(0, 10)}</span> 
+                <span>Letöltött geojson: {geojson?.metadata?.created_at?.slice(0, 10) ?? '-'}</span> 
                 <span>Betöltött gpx: {gpxGeojson?.features[0]?.properties.name ?? '-'}</span>
                 <Icon name='info' scale={0.8}
                     onClick={() => 
@@ -214,6 +214,8 @@ export default function HikingRoute(){
                 />
             </div>
         </div>
+
+        <LoadingOverlay open={loading} />
 
         <ConfirmDialog
             open={!!confirmState}

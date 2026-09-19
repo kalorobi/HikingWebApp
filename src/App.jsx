@@ -32,7 +32,6 @@ function App() {
               </LiveQueryProvider>
             }
           />
-          <Route path="/hikingRoute" element={<HikingRoute />} />
           <Route path="/" element={<Home />} />
 
           <Route path="/test" element={<GeoJsonCompare />} />
@@ -44,6 +43,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <DashBoard />
+              </ProtectedRoute>
+            }
+          />
+          <Route 
+            path="/hikingRoute" 
+            element={
+              <ProtectedRoute>
+                <HikingRoute />
               </ProtectedRoute>
             }
           />
