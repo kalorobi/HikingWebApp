@@ -47,7 +47,7 @@ function App() {
             }
           />
           <Route 
-            path="/hikingRoute" 
+            path="/hikingRoute/:mountain?" 
             element={
               <ProtectedRoute>
                 <HikingRoute />

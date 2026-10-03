@@ -3,7 +3,8 @@ import {Map as MapView, Source, Layer, Marker, Popup} from 'react-map-gl/maplibr
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { Tooltip } from 'react-tooltip';
 import 'react-tooltip/dist/react-tooltip.css';
-import { Mountains } from './LIvePlanMountains';
+//import { Mountains } from './LIvePlanMountains';
+import { MOUNTAINS } from '../../utils/mountains';
 import { centerOfMass } from '@turf/center-of-mass';
 import { destination } from "@turf/destination";
 import { bbox } from "@turf/bbox";
@@ -30,8 +31,8 @@ export default function LivePlanMap({plans, selectedPlan}){
             }
             else{
                 const po = point(
-                    [Mountains[plan.mountain]?.lng || 0, 
-                    Mountains[plan.mountain]?.lat || 0]
+                    [MOUNTAINS[plan.mountain.toLowerCase()]?.lng || 0, 
+                    MOUNTAINS[plan.mountain.toLowerCase()]?.lat || 0]
                 );
                 if(po.geometry.coordinates[0] === 0 && po.geometry.coordinates[1] === 0)
                     log.warn('Mountains data is empty', plan.mountain);

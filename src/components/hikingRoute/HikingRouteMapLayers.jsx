@@ -1,7 +1,7 @@
 export const baseMap = {
     dragRotate: false,
     interactiveLayerIds: ['way-hitbox', 'cut-point'],
-    initialViewState: { longitude: 19.826587, latitude: 47.9263058, zoom: 12 },
+    //initialViewState: { longitude: 19.826587, latitude: 47.9263058, zoom: 12 },
     style: { width: '100%', height: '100%' },
     mapStyle: "https://tiles.openfreemap.org/styles/bright"
 }

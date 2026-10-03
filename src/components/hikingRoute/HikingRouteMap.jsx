@@ -4,7 +4,7 @@ import * as mapLayers from './HikingRouteMapLayers';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import bbox from '@turf/bbox';
 
-export default function HikingRouteMap({ geojson, gpxGeojson, selectedWaysView, onFeatureClick, onCutPoint }) {
+export default function HikingRouteMap({ mountain, geojson, gpxGeojson, selectedWaysView, onFeatureClick, onCutPoint }) {
 
   const mapRef = useRef(null);
   // cutPreview: csak a JOBB KLIKKEL kiválasztott way vizuális előnézete (a "vágóvonal" és a rajta
@@ -134,6 +134,7 @@ export default function HikingRouteMap({ geojson, gpxGeojson, selectedWaysView, 
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
       <Map
         reuseMaps ref={mapRef} cursor={cursor} {...mapLayers.baseMap}
+        initialViewState={{"longitude": mountain.lng, "latitude": mountain.lat, "zoom": 12}}
 
         onLoad={() => {
           mapRef.current?.getMap()?.touchZoomRotate.disableRotation();

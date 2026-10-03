@@ -154,9 +154,11 @@ function MapTableRow({ index, feature, isInView, visited, onRowClick }) {
         })} km
       </td>
       <td>
-        <span className="visited-dates">
-          {(properties.visitedDates ?? []).join('\n')}
-        </span>
+          <span className="visited-dates">
+            {(properties.visitedDates ?? []).slice(-1).join('\n')}
+            {(properties.visitedDates ?? []).length > 1 &&
+              ` +${(properties.visitedDates ?? []).length - 1}`}
+          </span>
       </td>
     </tr>
   );
