@@ -1,6 +1,8 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
+import { useParams, Navigate, useNavigate } from 'react-router-dom';
 import './styles/HikingRoute.css';
 import { useGeojson } from '../components/hikingRoute/useGeojson';
+import { resolveMountain } from '../utils/mountains';
 import { useSelectedWays } from '../components/hikingRoute/useSelectedWays';
 import HikingRouteMap from '../components/hikingRoute/HikingRouteMap';
 import HikingRouteTable from '../components/hikingRoute/HikingRouteTable';
@@ -13,6 +15,10 @@ import { downloadGpx } from '../services/supabase/storageGpx';
 import LoadingOverlay from '../components/common/LoadingOverlay';
 
 export default function HikingRoute(){
+    // /hikingRoute/:mountain - ez határozza meg, melyik hegység adataival dolgozunk
+    const { mountain: mountainParam } = useParams();
+    const mountain = resolveMountain(mountainParam ?? "Matra");
+
     //Térképen kijelölt szakasz
     const [selectedFeatureId, setSelectedFeatureId] = useState(null);
     //Táblázatban kijelölt szakaszok
@@ -23,10 +29,9 @@ export default function HikingRoute(){
         setConfirmState({ title, text, onConfirm, cancel });
     };
 
-    //Supabase storage-ből letöltött geojson
-    const { geojson, loading, setVisited, cutWay, undoLastEdit,
-        syncToSupabase, pendingEditsCount, forceRefresh, addGpx } = useGeojson();
-
+    //Supabase storage-ből letöltött geojson (az adott hegységé)
+    const { geojson, loading, error, setVisited, cutWay, undoLastEdit,
+        syncToSupabase, pendingEditsCount, forceRefresh, addGpx } = useGeojson(mountain?.id ?? null);
 
     const usedGpxNames = geojson?.metadata?.gpxes?.map(g => g.name) ?? [];
     const [gpxDialogOpen, setGpxDialogOpen] = useState(false);
@@ -37,6 +42,20 @@ export default function HikingRoute(){
     const { selectedWays, selectedRelations } = useSelectedWays(geojson, selectedFeatureId);
 
     const fileInputRef = useRef(null);
+
+    // hegységváltáskor a helyi (nem a hook-ban tárolt) kijelölések, betöltött gpx
+    // nem maradhatnak - azok az előző hegység feature-eire mutatnának.
+    // (Ha a route-ban `key={mountainParam}`-ot adsz a komponensnek, ez a effekt
+    // feleslegessé válik, mert teljes remount történik.)
+    useEffect(() => {
+        setSelectedFeatureId(null);
+        setSelectedWaysView(null);
+        setGpxGeojson(null);
+        setGpxTime(null);
+        setConfirmState(null);
+        setGpxDialogOpen(false);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+    }, [mountainParam]);
 
     const handleGpxDialogSelect = async (fileName) => {
         setGpxDialogOpen(false);
@@ -61,6 +80,7 @@ export default function HikingRoute(){
         const gpxName = gpxGeojson.features[0]?.properties.name ?? null;
         if(!gpxName) return;
         addGpx(gpxName);
+        handleClearGpx();
     }
 
     const handleClearGpx = () => {
@@ -99,11 +119,12 @@ export default function HikingRoute(){
         <>
         <div className='hikingBox'>
             <div className='hikingHeader'>
-              Hiking Route v1.0
+              Hiking Route v1.1 - {mountain.label}
             </div>
             <div className='mainBox'>
                 <div className='mapBox'>
                     <HikingRouteMap 
+                        mountain={mountain}
                         geojson={geojson}
                         gpxGeojson={gpxGeojson}
                         selectedWaysView={selectedWaysView}
@@ -132,7 +153,8 @@ export default function HikingRoute(){
                                 gpxGeojson?
                                     askConfirm(
                                         'GPX rögzítés',
-                                        `GPX feldolgozás megtörtént?`,
+                                        `GPX feldolgozás megtörtént?
+                                        ${gpxGeojson.features[0]?.properties.name ?? null}`,
                                         handleGpxOk
                                 )
                                 : undefined
@@ -156,7 +178,7 @@ export default function HikingRoute(){
                                 pendingEditsCount > 0 ?
                                 askConfirm(
                                     'Törlés',
-                                    `A helyi adatbázisban ${pendingEditsCount} módosítás van.
+                                    `A helyi adatbázisban ${pendingEditsCount} módosítás van (${mountain.label}).
                                     Biztosan folytatod?`,
                                     forceRefresh
                                 )
@@ -171,7 +193,7 @@ export default function HikingRoute(){
                                 pendingEditsCount > 0 ?
                                 askConfirm(
                                     'Feltöltés',
-                                    `Adatok feltöltése az adatbázisba?
+                                    `${mountain.label} adatainak feltöltése az adatbázisba?
                                     A helyi adatbázisban ${pendingEditsCount} módosítás van.`,
                                     syncToSupabase
                                 ) 
@@ -204,8 +226,9 @@ export default function HikingRoute(){
                     onClick={() => 
                         askConfirm(
                             'Információk',
-                            `Utolsó gpx: ${geojson.metadata.gpxes[geojson.metadata.gpxes.length-1].name}
-                            Geojson alap: ${geojson.metadata.base}`,
+                            `Hegység: ${mountain.label}
+                            Utolsó gpx: ${geojson?.metadata?.gpxes?.at(-1)?.name ?? '-'}
+                            Geojson alap: ${geojson?.metadata?.created_at ?? '-'}`,
                             handleCloseConfirm,
                         )
                     }
@@ -227,6 +250,14 @@ export default function HikingRoute(){
                 confirmState?.onConfirm();
                 setConfirmState(null);
             }}
+        />
+
+        <ConfirmDialog
+            open={!!error}
+            cancel={false}
+            title="Hiba"
+            text={error?.message ?? ''}
+            onConfirm={() => {}}
         />
 
         <GpxDialog
