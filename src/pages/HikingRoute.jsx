@@ -17,7 +17,11 @@ import LoadingOverlay from '../components/common/LoadingOverlay';
 export default function HikingRoute(){
     // /hikingRoute/:mountain - ez határozza meg, melyik hegység adataival dolgozunk
     const { mountain: mountainParam } = useParams();
-    const mountain = resolveMountain(mountainParam ?? "Matra");
+    const resolvedMountain = resolveMountain(mountainParam);
+
+    const mountain = resolvedMountain?.id
+        ? resolvedMountain
+        : resolveMountain("Matra");
 
     //Térképen kijelölt szakasz
     const [selectedFeatureId, setSelectedFeatureId] = useState(null);
