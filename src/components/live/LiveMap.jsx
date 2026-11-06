@@ -54,39 +54,61 @@ export default function LiveMap({geojson, refress, auth}) {
     setIs_center(true);
   }, [lastPoint]);
 
-  function toCeneter(e){
-    if (!lastPoint) return;
+function toCenter() {
+  const center = lastPoint
+    ? lastPoint.geometry.coordinates
+    : [showPopup.longitude, showPopup.latitude];
 
+  if (!center) return;
+
+  mapRef.current?.getMap().easeTo({
+    center,
+    zoom: 15,
+    duration: 2000,
+  });
+
+  setIs_center(true);
+}
+
+function toFullScreen() {
+  const liveFeatures = geojson?.features?.filter(
+    (f) =>
+      f.properties?.routeType === 'live' ||
+      f.properties?.routeType === 'live-flat' ||
+      f.properties?.mode
+  );
+
+  if (!liveFeatures?.length) {
     mapRef.current?.getMap().easeTo({
-      center: [lastPoint.geometry.coordinates[0], lastPoint.geometry.coordinates[1]],
-      zoom: 15, duration: 2000
+      center: [showPopup.longitude, showPopup.latitude],
+      zoom: 15,
+      duration: 1000,
     });
-    setIs_center(true);
+    return;
   }
 
-  function toFullScreen(e) {
-    if (!geojson?.features?.length) return;
+  const [minLng, minLat, maxLng, maxLat] = bbox({
+    type: 'FeatureCollection',
+    features: liveFeatures,
+  });
 
-    const liveFeatures = geojson.features.filter(
-      f => f.properties?.routeType === 'live'
-        || f.properties?.routeType === 'live-flat'
-        || f.properties?.mode
-    );
-
-    if (!liveFeatures.length) return;
-
-    const [minLng, minLat, maxLng, maxLat] = bbox({
-      type: 'FeatureCollection',
-      features: liveFeatures,
+  if (minLng == null) {
+    mapRef.current?.getMap().easeTo({
+      center: [showPopup.longitude, showPopup.latitude],
+      zoom: 15,
+      duration: 1000,
     });
-
-    if (minLng == null) return;
-
-    mapRef.current.fitBounds(
-      [[minLng, minLat], [maxLng, maxLat]],
-      { padding: 40, duration: 1000, maxZoom: 16 }
-    );
+    return;
   }
+
+  mapRef.current?.fitBounds(
+    [
+      [minLng, minLat],
+      [maxLng, maxLat],
+    ],
+    { padding: 40, duration: 1000, maxZoom: 16 }
+  );
+}
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
@@ -104,6 +126,27 @@ export default function LiveMap({geojson, refress, auth}) {
       style={{ width: '100%', height: '100%' }}
       mapStyle={activeStyle.style}
     >
+      { activeStyle.id === "maptiler" &&
+      <Source
+        id="mapterhorn-dem"
+        type="raster-dem"
+        url="https://tiles.mapterhorn.com/tilejson.json"
+        encoding="terrarium"
+      >
+        <Layer
+          minzoom={12}
+          id="terrain-hillshade"
+          type="hillshade"
+          paint={{
+          'hillshade-exaggeration': 0.35,
+          'hillshade-shadow-color': '#C9A78E',
+          'hillshade-highlight-color': '#ffffff',
+          'hillshade-illumination-direction': 315,
+          }}
+        />
+      </Source>
+      }
+
     <Source id="route-data" type="geojson" data={geojson}>
       {/* planned vonalak */}
       <Layer id="planned" type="line"
@@ -202,17 +245,35 @@ export default function LiveMap({geojson, refress, auth}) {
       </div>
       </Popup>
     )}
-    {lastPoint && (
-      <Marker
-        longitude={lastPoint.geometry.coordinates[0]}
-        latitude={lastPoint.geometry.coordinates[1]}
-      >
-        <img src={
+   {lastPoint && (
+    <>
+    <Marker
+      longitude={lastPoint.geometry.coordinates[0]}
+      latitude={lastPoint.geometry.coordinates[1]}
+    >
+      <img
+        src={
           lastPoint.properties.mode === 'hiking'
             ? mokus
             : car
-          } alt="plane" width={60*zoom/12} height={51*zoom/12}/>
-      </Marker>
+        }
+        alt="plane"
+        width={60 * zoom / 12}
+        height={51 * zoom / 12}
+      />
+    </Marker>
+
+    <Popup
+      longitude={lastPoint.geometry.coordinates[0]}
+      latitude={lastPoint.geometry.coordinates[1]}
+      anchor="bottom"
+      closeButton={false}
+      closeOnClick={false}
+      offset={[0, -(51 * zoom / 12) / 2]}
+    >
+      {auth.user}
+    </Popup>
+    </>
     )}
     </Map>
 
@@ -220,7 +281,7 @@ export default function LiveMap({geojson, refress, auth}) {
 
      <div style={{position: 'absolute', right: 16, top: 16, display: 'flex',flexDirection: 'column',
         gap: 8, zIndex: 10}}>
-        <button style={{ padding: 0, lineHeight: 0 }} onClick={toCeneter}>
+        <button style={{ padding: 0, lineHeight: 0 }} onClick={toCenter}>
           <Icon name={is_center ? "locateFixed" : "locate"}/>
         </button>
         <button style={{ padding: 0, lineHeight: 0 }} onClick={toFullScreen}>
