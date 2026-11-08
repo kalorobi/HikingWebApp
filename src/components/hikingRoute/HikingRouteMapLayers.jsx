@@ -16,7 +16,12 @@ export const wayHitbox = {
 export const gpx = {
     paint: { 
         'line-color': '#B5603E', 
-        'line-width': 10, 'line-opacity': 0.3
+        'line-width': [
+            'interpolate',['linear'],['zoom'],
+            10, 8,
+            13, 15
+        ], 
+        'line-opacity': 0.5
     },
     layout: {
         'line-join': 'round',
@@ -54,6 +59,18 @@ export const visited = {
     paint: { 
         'line-color': '#7A9E6F', 
         'line-width': 3, 'line-opacity': 0.8 
+    },
+    layout: {
+        'line-join': 'round',
+        'line-cap': 'round',
+    }
+}
+
+export const all_selected = {
+    paint: { 
+        'line-color': '#A8C4CC',
+        'line-width': 10,
+        'line-opacity': 0.6
     },
     layout: {
         'line-join': 'round',
