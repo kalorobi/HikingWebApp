@@ -131,6 +131,7 @@ export default function HikingRoute(){
                         mountain={mountain}
                         geojson={geojson}
                         gpxGeojson={gpxGeojson}
+                        selectedWays={selectedWays}
                         selectedWaysView={selectedWaysView}
                         onFeatureClick={handleFeatureClick}
                         onCutPoint={handleCutPoint}

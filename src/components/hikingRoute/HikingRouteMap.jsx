@@ -4,7 +4,7 @@ import * as mapLayers from './HikingRouteMapLayers';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import bbox from '@turf/bbox';
 
-export default function HikingRouteMap({ mountain, geojson, gpxGeojson, selectedWaysView, onFeatureClick, onCutPoint }) {
+export default function HikingRouteMap({ mountain, geojson, gpxGeojson, selectedWays, selectedWaysView, onFeatureClick, onCutPoint }) {
 
   const mapRef = useRef(null);
   // cutPreview: csak a JOBB KLIKKEL kiválasztott way vizuális előnézete (a "vágóvonal" és a rajta
@@ -12,6 +12,11 @@ export default function HikingRouteMap({ mountain, geojson, gpxGeojson, selected
   const [cutPreview, setCutPreview] = useState({ type: "FeatureCollection", features: [] });
   const [cursor, setCursor] = useState('auto');
   const hoveredPointId = useRef(null);
+
+  useEffect(() => {
+    if (!selectedWays || !selectedWays.features?.length || !mapRef.current) return;
+    toBbox(selectedWays);
+  }, [selectedWays]);
 
   useEffect(() => {
     if (!selectedWaysView || !selectedWaysView.features?.length || !mapRef.current) return;
@@ -148,9 +153,15 @@ export default function HikingRouteMap({ mountain, geojson, gpxGeojson, selected
           <Layer id="gpx-layer" type="line" {...mapLayers.gpx} />
           <Layer id="gpx-layer-name" type="symbol" {...mapLayers.gpxName} /> 
         </Source>
+
+        <Source id="way_all_selected" type="geojson" data={selectedWays ?? { ...mapLayers.empty}}>
+          <Layer id="all_selected-layer" type="line"
+            {...mapLayers.all_selected} />
+        </Source>
+
         <Source
           id="way-source" type="geojson"
-          data={geojson} promoteId="uid"
+          data={geojson ?? { ...mapLayers.empty}} promoteId="uid"
         >
           <Layer
             id="way-hitbox" type="line"
@@ -168,6 +179,7 @@ export default function HikingRouteMap({ mountain, geojson, gpxGeojson, selected
             {...mapLayers.visited}
           />
         </Source>
+
         <Source id="way-selected" type="geojson" data={selectedWaysView ?? { ...mapLayers.empty }}>
           <Layer id="selected-layer" type="line"
             filter={['!=', ['get', 'visited'], true]}
